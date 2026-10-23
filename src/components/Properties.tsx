@@ -15,6 +15,7 @@ import { transport } from "../engine/transport";
 import { duplicateClip } from "../core/actions";
 import { type Clip, type Motion } from "../core/model";
 import { Button, Field, Input, Section, skin, cn, IconButton } from "./ui";
+import { editor } from "./editor-ui";
 const motions = [
   { value: "none", label: "None" },
   { value: "fade", label: "Fade" },
@@ -41,16 +42,14 @@ export function Properties({ widthClass = "w-60" }: { widthClass?: string }) {
         skin.border,
       )}
     >
-      <div
-        className={cn(
-          "flex h-10 shrink-0 items-center gap-2 border-b px-4 text-xs",
-          skin.border,
-        )}
-      >
-        <SlidersHorizontalIcon size={14} />
+      <div className={cn(editor.panelHeader, "gap-2", skin.border)}>
+        <SlidersHorizontalIcon size={16} className={skin.muted} />
         {c ? "Segment properties" : "Project settings"}
       </div>
-      <div key={c?.id || "project"} className="min-h-0 flex-1 overflow-y-auto">
+      <div
+        key={c?.id || "project"}
+        className={cn("min-h-0 flex-1 overflow-y-auto", editor.scroll)}
+      >
         {!c ? (
           <>
             <Section title="Your project">
@@ -118,27 +117,8 @@ export function Properties({ widthClass = "w-60" }: { widthClass?: string }) {
               />
             </Section>
             <div className={cn("p-4 text-xs leading-relaxed", skin.muted)}>
-              Select a segment to adjust its timing, appearance, and animation.
-              <div className={cn("mt-5 rounded-lg border p-3", skin.border)}>
-                <p className="mb-2 font-medium">A few useful shortcuts</p>
-                <div className="space-y-2 text-xs">
-                  <p>
-                    Space <span className="float-right">Play / pause</span>
-                  </p>
-                  <p>
-                    S <span className="float-right">Split segment</span>
-                  </p>
-                  <p>
-                    Delete <span className="float-right">Remove segment</span>
-                  </p>
-                  <p>
-                    ⌘ Z <span className="float-right">Undo</span>
-                  </p>
-                  <p>
-                    ← / → <span className="float-right">One frame</span>
-                  </p>
-                </div>
-              </div>
+              Select a clip on the timeline to edit its timing, appearance, and
+              animation.
             </div>
           </>
         ) : (
@@ -242,10 +222,17 @@ export function Properties({ widthClass = "w-60" }: { widthClass?: string }) {
                     step={1}
                     onChange={(opacity) => patch({ opacity: opacity / 100 })}
                   />
-                  <p className={cn("text-xs leading-relaxed", skin.muted)}>
-                    Corners keep proportions; sides resize one dimension. Shift
-                    frees the ratio; Option/Alt resizes from the center.
-                  </p>
+                  <details
+                    className={cn("text-xs leading-relaxed", skin.muted)}
+                  >
+                    <summary className="cursor-pointer rounded outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+                      Transform shortcuts
+                    </summary>
+                    <p className="mt-2">
+                      Corners keep proportions; sides resize one dimension.
+                      Shift frees the ratio; Option/Alt resizes from the center.
+                    </p>
+                  </details>
                 </Section>
                 {c.kind === "text" && (
                   <Section title="Text">
@@ -426,7 +413,7 @@ export function Properties({ widthClass = "w-60" }: { widthClass?: string }) {
               </Section>
             )}
             <Section title="Actions">
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button onClick={duplicateClip}>
                   <CopyIcon size={13} />
                   Duplicate

@@ -72,7 +72,9 @@ export function PerformanceDialog({ onClose }: { onClose: () => void }) {
               className={cn("rounded-lg border p-3", skin.border, skin.raised)}
             >
               <p className={cn("text-xs", skin.muted)}>{m.label}</p>
-              <p className="mt-1 font-mono text-lg">{m.value}</p>
+              <p className="mt-1 text-sm font-semibold tabular-nums">
+                {m.value}
+              </p>
             </div>
           ))}
         </div>

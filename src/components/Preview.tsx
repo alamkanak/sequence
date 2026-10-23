@@ -25,6 +25,7 @@ import { duration, type Clip } from "../core/model";
 import { meter } from "../core/performance";
 import { cn, skin, IconButton, timecode } from "./ui";
 import { Select } from "./Select";
+import { editor } from "./editor-ui";
 export function TransportControls() {
   const { project } = useStore();
   const [playing, setPlaying] = useState(transport.playing);
@@ -41,7 +42,7 @@ export function TransportControls() {
   return (
     <div
       className={cn(
-        "flex h-12 shrink-0 items-center justify-between gap-2 border-t px-3",
+        "grid h-12 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2 border-t px-3",
         skin.border,
         skin.panel,
       )}
@@ -49,36 +50,57 @@ export function TransportControls() {
       <div
         className={cn("flex items-center gap-1 font-mono text-xs", skin.muted)}
       >
-        <span ref={current} className="text-indigo-400">
+        <span
+          ref={current}
+          className="text-indigo-600 [[data-theme=dark]_&]:text-indigo-300"
+        >
           {timecode(transport.time, project.fps)}
         </span>
-        <span>/</span>
-        <span>{timecode(duration(project), project.fps)}</span>
+        <span className="hidden @[480px]:inline">/</span>
+        <span className="hidden @[480px]:inline">
+          {timecode(duration(project), project.fps)}
+        </span>
       </div>
-      <div className="flex items-center gap-2">
-        <IconButton label="Go to start" onClick={() => transport.seek(0)}>
-          <SkipBackIcon size={20} weight="fill" />
+      <div className={cn("flex items-center gap-1", skin.muted)}>
+        <IconButton
+          size="sm"
+          label="Go to start"
+          onClick={() => transport.seek(0)}
+        >
+          <SkipBackIcon size={18} weight="fill" />
         </IconButton>
         <IconButton
           label={playing ? "Pause" : "Play"}
+          size="sm"
           onClick={() => void transport.play()}
-          className="rounded-full bg-indigo-500/15 text-indigo-400"
+          className={editor.active}
         >
           {playing ? (
-            <PauseIcon size={20} weight="fill" />
+            <PauseIcon size={18} weight="fill" />
           ) : (
-            <PlayIcon size={20} weight="fill" />
+            <PlayIcon size={18} weight="fill" />
           )}
         </IconButton>
         <IconButton
           label="Go to end"
+          size="sm"
           onClick={() => transport.seek(duration(project) - 1 / project.fps)}
         >
-          <SkipForwardIcon size={20} weight="fill" />
+          <SkipForwardIcon size={18} weight="fill" />
         </IconButton>
       </div>
-      <div className={cn("hidden text-xs @[560px]:block", skin.muted)}>
-        Space to play
+      <div
+        className={cn(
+          "hidden items-center justify-end gap-2 text-xs @[640px]:flex",
+          skin.muted,
+        )}
+      >
+        <kbd
+          className={cn("rounded border px-1.5 py-0.5 font-sans", skin.border)}
+        >
+          Space
+        </kbd>{" "}
+        Play / pause
       </div>
     </div>
   );
@@ -558,18 +580,18 @@ export function Preview() {
     <div className="@container flex min-h-0 min-w-80 flex-1 flex-col">
       <div
         className={cn(
-          "flex h-10 shrink-0 items-center justify-between border-b px-4 text-xs",
+          editor.panelHeader,
+          "justify-between",
           skin.border,
           skin.panel,
         )}
       >
-        <span className={cn("hidden @[360px]:inline", skin.muted)}>
-          Preview
-        </span>
-        <div className="flex items-center gap-3">
+        <span className="hidden @[440px]:inline">Preview</span>
+        <div className={cn("ml-auto flex items-center gap-2", skin.muted)}>
           <Select
             label="Preview quality"
             hideLabel
+            variant="toolbar"
             value={quality}
             onChange={(value) => setQuality(+value)}
             options={[
@@ -584,13 +606,14 @@ export function Preview() {
           </span>
           <IconButton
             label="Fullscreen preview"
+            size="sm"
             onClick={() => host.current?.requestFullscreen()}
           >
-            <CornersOutIcon size={20} />
+            <CornersOutIcon size={16} />
           </IconButton>
         </div>
       </div>
-      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-zinc-200 p-6 [[data-theme=dark]_&]:bg-[#222228]">
+      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-zinc-100 p-6 [[data-theme=dark]_&]:bg-[#18181d]">
         <div ref={host} className="relative size-full">
           <div
             ref={scene}
@@ -619,8 +642,11 @@ export function Preview() {
           )}
           {!project.clips.length && !loading && (
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 text-zinc-500">
-              <CrosshairIcon size={30} weight="thin" />
-              <p className="text-xs">A blank canvas. An open possibility.</p>
+              <CrosshairIcon size={28} />
+              <p className="text-sm font-medium">Start with a clip</p>
+              <p className="max-w-52 text-center text-xs leading-relaxed">
+                Import media, then add it to your timeline.
+              </p>
             </div>
           )}
         </div>

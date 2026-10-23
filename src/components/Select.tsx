@@ -10,6 +10,7 @@ export function Select({
   options,
   disabled = false,
   hideLabel = false,
+  variant = "field",
   className,
 }: {
   label: string;
@@ -18,6 +19,7 @@ export function Select({
   options: { value: string | number; label: string }[];
   disabled?: boolean;
   hideLabel?: boolean;
+  variant?: "field" | "toolbar";
   className?: string;
 }) {
   const id = useId();
@@ -31,8 +33,13 @@ export function Select({
         id={id}
         aria-label={label}
         className={cn(
-          controlClass,
-          "flex min-w-0 items-center justify-between gap-2 px-2.5 text-left data-[state=open]:border-indigo-500/60 data-[state=open]:ring-2 data-[state=open]:ring-indigo-500/10",
+          variant === "field"
+            ? cn(
+                controlClass,
+                "data-[state=open]:border-indigo-500/60 data-[state=open]:ring-2 data-[state=open]:ring-indigo-500/10",
+              )
+            : "h-8 rounded-md bg-transparent text-xs outline-none transition-colors hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-indigo-500 data-[state=open]:bg-zinc-100 [[data-theme=dark]_&]:hover:bg-white/[0.06] [[data-theme=dark]_&]:data-[state=open]:bg-white/[0.06]",
+          "flex min-w-0 items-center justify-between gap-2 px-2.5 text-left",
           !hideLabel && "w-full",
           className,
         )}

@@ -71,7 +71,7 @@ export function Editor() {
   const rightMax = Math.max(200, Math.min(600, viewport.width - left - 322));
   const timelineMax = Math.max(
     160,
-    Math.min(800, viewport.height - 64 - (error ? 48 : 0) - 241),
+    Math.min(800, viewport.height - 56 - (error ? 48 : 0) - 241),
   );
   useEffect(() => {
     const observer = new ResizeObserver(() => {
@@ -170,7 +170,7 @@ export function Editor() {
     <div
       ref={editorRef}
       className={cn(
-        "flex h-dvh min-h-[640px] min-w-[760px] flex-col overflow-hidden",
+        "flex h-dvh min-h-[640px] min-w-[760px] flex-col overflow-hidden text-xs [&_a]:focus-visible:outline-2 [&_a]:focus-visible:outline-offset-2 [&_a]:focus-visible:outline-indigo-500 [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-offset-2 [&_button]:focus-visible:outline-indigo-500",
         skin.app,
       )}
       {...fileDrop}
@@ -201,18 +201,22 @@ export function Editor() {
     >
       <header
         className={cn(
-          "flex h-16 shrink-0 items-center justify-between border-b px-4",
+          "flex h-14 shrink-0 items-center justify-between gap-4 border-b px-4",
           skin.border,
           skin.panel,
         )}
       >
-        <div className="flex min-w-0 items-center gap-4">
+        <div className="flex min-w-0 items-center gap-3">
           <a
             href="#/"
             aria-label="Sequence home"
             className="flex items-center gap-2 text-sm font-semibold tracking-tight"
           >
-            <StackSimpleIcon size={22} weight="fill" />
+            <StackSimpleIcon
+              size={22}
+              weight="fill"
+              className="text-indigo-600 [[data-theme=dark]_&]:text-indigo-400"
+            />
             Sequence
           </a>
           <span className={cn("h-4 border-l", skin.border)} />
@@ -220,14 +224,15 @@ export function Editor() {
             label="Project menu"
             trigger={
               <>
-                <span className="max-w-48 truncate">{project.name}</span>
-                <CaretDownIcon size={18} />
+                <span className="max-w-32 truncate lg:max-w-48">
+                  {project.name}
+                </span>
+                <CaretDownIcon size={14} className={skin.muted} />
               </>
             }
           >
             <Button
               variant="ghost"
-              textSize="sm"
               className="w-full justify-start"
               onClick={() => {
                 transport.pause();
@@ -244,7 +249,6 @@ export function Editor() {
             </Button>
             <Button
               variant="ghost"
-              textSize="sm"
               className="w-full justify-start"
               onClick={() => projectInput.current?.click()}
             >
@@ -253,7 +257,6 @@ export function Editor() {
             </Button>
             <Button
               variant="ghost"
-              textSize="sm"
               className="w-full justify-start"
               onClick={() => {
                 transport.pause();
@@ -267,7 +270,6 @@ export function Editor() {
             </Button>
             <Button
               variant="ghost"
-              textSize="sm"
               className="w-full justify-start"
               onClick={() => {
                 store.patch({ selected: null });
@@ -278,7 +280,6 @@ export function Editor() {
             </Button>
             <Button
               variant="ghost"
-              textSize="sm"
               className="w-full justify-start"
               onClick={() => (location.hash = "/")}
             >
@@ -293,13 +294,12 @@ export function Editor() {
             )}
           >
             <span className="size-1 rounded-full bg-emerald-400" />
-            Autosaved locally
+            Local workspace
           </span>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className={cn("flex shrink-0 items-center gap-1", skin.muted)}>
           <IconButton
             label="Undo"
-            size="lg"
             onClick={() => store.undo()}
             disabled={!store.canUndo()}
           >
@@ -307,7 +307,6 @@ export function Editor() {
           </IconButton>
           <IconButton
             label="Redo"
-            size="lg"
             onClick={() => store.redo()}
             disabled={!store.canRedo()}
           >
@@ -316,28 +315,26 @@ export function Editor() {
           <span className={cn("mx-2 h-4 border-l", skin.border)} />
           <IconButton
             label="Keyboard shortcuts"
-            size="lg"
             onClick={() => setDialog("shortcuts")}
           >
             <KeyboardIcon size={18} />
           </IconButton>
           <IconButton
             label="Performance lab"
-            size="lg"
             onClick={() => setDialog("performance")}
           >
             <ChartLineIcon size={18} />
           </IconButton>
-          <ThemePicker />
+          <ThemePicker compact />
           <Button
             variant="primary"
-            className="ml-3 h-10 px-4"
+            className="ml-2 h-9 px-4"
             onClick={() => setDialog("export")}
           >
             {job.status === "rendering"
               ? `Rendering ${Math.round(job.progress * 100)}%`
               : "Export"}
-            <ArrowUpRightIcon size={18} />
+            <ArrowUpRightIcon size={16} />
           </Button>
         </div>
       </header>
@@ -370,12 +367,13 @@ export function Editor() {
           className="flex shrink-0 items-center justify-between gap-4 border-b border-amber-500/15 bg-amber-500/5 px-4 py-2 text-xs text-amber-600 [[data-theme=dark]_&]:text-amber-300"
         >
           <span>{error}</span>
-          <button
-            aria-label="Dismiss notification"
+          <IconButton
+            label="Dismiss notification"
+            size="xs"
             onClick={() => store.patch({ error: "" })}
           >
-            <XIcon size={13} />
-          </button>
+            <XIcon size={16} />
+          </IconButton>
         </div>
       )}
       <main ref={mainRef} className="flex min-h-60 flex-1">

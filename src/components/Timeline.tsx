@@ -45,6 +45,7 @@ import { cn, skin, IconButton, Button } from "./ui";
 import { setCanvasCursor, type CanvasCursor } from "./canvas-cursor";
 import { PanelDivider, usePanelSize } from "./PanelDivider";
 import { panelSizeClass } from "./panel-sizes";
+import { editor } from "./editor-ui";
 const ROW = 64,
   TOP = 26;
 type Gesture = {
@@ -174,11 +175,19 @@ export function Timeline({
       height = 0,
       raf = 0;
     const ctx = el.getContext("2d")!;
+    let fonts = { body: ctx.font, medium: ctx.font, mono: ctx.font };
     const resize = new ResizeObserver(() => {
       width = host.clientWidth;
       height = host.clientHeight;
       el.width = Math.round(width * devicePixelRatio);
       el.height = Math.round(height * devicePixelRatio);
+      // Canvas labels share the Tailwind text-xs scale used by the controls.
+      const type = getComputedStyle(el);
+      fonts = {
+        body: `${type.fontSize} ${type.fontFamily}`,
+        medium: `500 ${type.fontSize} ${type.fontFamily}`,
+        mono: `${type.fontSize} ${type.getPropertyValue("--font-mono") || "monospace"}`,
+      };
       dirty.current = true;
     });
     resize.observe(host);
@@ -195,7 +204,7 @@ export function Timeline({
       ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = dark ? "#101013" : "#ffffff";
       ctx.fillRect(0, 0, width, height);
-      ctx.font = "12px ui-monospace,monospace";
+      ctx.font = fonts.mono;
       ctx.textBaseline = "middle";
       const step = zoom < 25 ? 5 : zoom < 55 ? 2 : 1;
       const first = Math.floor(offset.current / zoom / step) * step;
@@ -276,6 +285,7 @@ export function Timeline({
                     end: Math.max(g.rangeStart!, g.rangeEnd!),
                   }
                 : state.current.range;
+            ctx.font = fonts.body;
             drawTimelineAudio(
               ctx,
               c,
@@ -291,17 +301,17 @@ export function Timeline({
           ctx.fillStyle = audio ? "#b7e4d2" : element ? "#e1d8ff" : "#dfe5ff";
           if (!dark)
             ctx.fillStyle = audio ? "#216453" : element ? "#53406c" : "#384964";
-          ctx.font = "500 12px system-ui";
+          ctx.font = fonts.medium;
           ctx.fillText(c.name, x + 9, y + 22);
           if (c.speed !== 1) {
-            ctx.font = "12px system-ui";
+            ctx.font = fonts.body;
             ctx.fillText(`${c.speed}×`, x + 9, y + 42);
           }
           if (
             gesture.current?.ghost?.id === c.id &&
             ["volume", "keyframe"].includes(gesture.current.mode)
           ) {
-            ctx.font = "12px system-ui";
+            ctx.font = fonts.body;
             ctx.fillText(
               formatDb(
                 volumeAt(
@@ -719,7 +729,7 @@ export function Timeline({
           skin.border,
         )}
       >
-        <div className="flex items-center gap-1">
+        <div className={cn("flex items-center gap-1", skin.muted)}>
           <IconButton
             label="Split at playhead (S)"
             disabled={!selectedClip}
@@ -756,7 +766,7 @@ export function Timeline({
             label="Snapping"
             aria-pressed={snap}
             onClick={() => setSnap(!snap)}
-            className={snap ? "text-indigo-400" : ""}
+            className={snap ? editor.active : ""}
           >
             <MagnetIcon size={17} />
           </IconButton>
@@ -764,7 +774,7 @@ export function Timeline({
             label="Ripple editing"
             aria-pressed={ripple}
             onClick={() => setRipple(!ripple)}
-            className={ripple ? "text-indigo-400" : ""}
+            className={ripple ? editor.active : ""}
           >
             <ArrowsDownUpIcon size={16} />
           </IconButton>
@@ -772,7 +782,7 @@ export function Timeline({
             variant="ghost"
             aria-label="Select audio range (R)"
             aria-pressed={rangeMode}
-            className={rangeMode ? "text-indigo-500" : ""}
+            className={rangeMode ? editor.active : ""}
             onClick={() => setRangeMode(!rangeMode)}
           >
             <SelectionIcon size={16} /> Range
@@ -783,7 +793,7 @@ export function Timeline({
             </Button>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className={cn("flex items-center gap-1", skin.muted)}>
           <span className={cn("hidden text-xs xl:block", skin.muted)}>
             R: audio range · Option-click: volume point
           </span>
@@ -803,7 +813,7 @@ export function Timeline({
               setZoom(+e.target.value);
               dirty.current = true;
             }}
-            className="w-20 accent-indigo-400"
+            className="h-1 w-20 cursor-pointer appearance-none rounded-full bg-zinc-200 outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 [&::-moz-range-thumb]:size-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-indigo-500 [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-500 [[data-theme=dark]_&]:bg-zinc-700"
           />
           <IconButton
             label="Zoom in"
@@ -842,7 +852,7 @@ export function Timeline({
               skin.muted,
             )}
           >
-            <span>TRACKS</span>
+            <span className="font-medium">Tracks</span>
             <div className="flex">
               <button
                 aria-label="Add video track"
@@ -905,7 +915,7 @@ export function Timeline({
                         },
                       ])
                     }
-                    className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+                    className="min-w-0 flex-1 rounded bg-transparent text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                   />
                   <span
                     className={cn(
@@ -916,7 +926,10 @@ export function Timeline({
                 </div>
                 <div className="flex items-center gap-1">
                   <button
-                    className="flex size-6 shrink-0 items-center justify-center rounded hover:bg-indigo-400/10"
+                    className={cn(
+                      "flex size-6 shrink-0 items-center justify-center rounded hover:bg-indigo-500/10",
+                      t.hidden && editor.active,
+                    )}
                     aria-label={`${t.hidden ? "Show" : "Hide"} ${t.name}`}
                     onClick={() =>
                       store.apply([
@@ -935,7 +948,10 @@ export function Timeline({
                     )}
                   </button>
                   <button
-                    className="flex size-6 shrink-0 items-center justify-center rounded hover:bg-indigo-400/10"
+                    className={cn(
+                      "flex size-6 shrink-0 items-center justify-center rounded hover:bg-indigo-500/10",
+                      t.muted && editor.active,
+                    )}
                     aria-label={`${t.muted ? "Unmute" : "Mute"} ${t.name}`}
                     onClick={() =>
                       store.apply([
@@ -954,7 +970,10 @@ export function Timeline({
                     )}
                   </button>
                   <button
-                    className="flex size-6 shrink-0 items-center justify-center rounded hover:bg-indigo-400/10"
+                    className={cn(
+                      "flex size-6 shrink-0 items-center justify-center rounded hover:bg-indigo-500/10",
+                      t.locked && editor.active,
+                    )}
                     aria-label={`${t.locked ? "Unlock" : "Lock"} ${t.name}`}
                     onClick={() =>
                       store.apply([
@@ -1051,7 +1070,7 @@ export function Timeline({
             tabIndex={0}
             data-testid="timeline-canvas"
             ref={canvas}
-            className="block size-full touch-none outline-none"
+            className="block size-full touch-none font-sans text-xs outline-none"
             onPointerDown={onDown}
             onDoubleClick={(e) => {
               const point = pos(e),

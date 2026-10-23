@@ -31,6 +31,7 @@ import type { Asset } from "../core/model";
 import { assetFiles } from "../engine/client";
 import { cn, skin, Button, IconButton, Input, Modal } from "./ui";
 import { ContextMenu } from "./ContextMenu";
+import { editor } from "./editor-ui";
 export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
   const { project, tab } = useStore();
   const drag = useRef<{
@@ -48,6 +49,9 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
   const relinkTarget = useRef<Asset | null>(null);
   const [relinkResult, setRelinkResult] = useState("");
   const missing = project.assets.filter((a) => !assetFiles.has(a.id));
+  const visibleAssets = project.assets.filter((a) =>
+    a.name.toLowerCase().includes(search.toLowerCase()),
+  );
   function chooseRelink(asset: Asset | null) {
     relinkTarget.current = asset;
     if (relinkPicker.current) {
@@ -121,12 +125,7 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
       )}
       {...fileDrop}
     >
-      <div
-        className={cn(
-          "flex h-10 shrink-0 items-center gap-5 border-b px-4 text-xs",
-          skin.border,
-        )}
-      >
+      <div className={cn(editor.panelHeader, "gap-5", skin.border)}>
         {(["media", "elements"] as const).map((t) => (
           <button
             key={t}
@@ -134,7 +133,7 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
             className={cn(
               "h-full border-b-2 pt-0.5 capitalize",
               tab === t
-                ? "border-indigo-400 text-indigo-400"
+                ? "border-indigo-500 text-indigo-600 [[data-theme=dark]_&]:text-indigo-300"
                 : cn("border-transparent", skin.muted),
             )}
           >
@@ -142,7 +141,12 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
           </button>
         ))}
       </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
+      <div
+        className={cn(
+          "flex min-h-0 flex-1 flex-col overflow-y-auto p-3",
+          editor.scroll,
+        )}
+      >
         {tab === "media" ? (
           <>
             <input
@@ -172,11 +176,13 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
             <Button
               onClick={() => picker.current?.click()}
               disabled={loading}
-              className="w-full"
+              className="w-full justify-start"
             >
               <UploadSimpleIcon size={15} />
               {loading ? "Reading media…" : "Import media"}
-              <span className={cn("ml-auto text-xs", skin.muted)}>⌘I</span>
+              <kbd className={cn("ml-auto font-sans text-xs", skin.muted)}>
+                ⌘I
+              </kbd>
             </Button>
             {missing.length > 0 && (
               <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
@@ -209,18 +215,18 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
             )}
             <div className="relative mt-3">
               <MagnifyingGlassIcon
-                size={13}
+                size={14}
                 className={cn(
-                  "pointer-events-none absolute top-2.5 left-2",
+                  "pointer-events-none absolute top-2 left-2.5",
                   skin.muted,
                 )}
               />
               <Input
                 aria-label="Search media"
-                placeholder="Search your media…"
+                placeholder="Search media…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full border-0 bg-transparent pl-7"
+                className="pl-8"
               />
             </div>
             <div
@@ -229,171 +235,195 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
                 skin.muted,
               )}
             >
-              <span>PROJECT MEDIA</span>
-              <span>{project.assets.length} assets</span>
+              <span className="font-medium">Project media</span>
+              <span aria-live="polite">
+                {search
+                  ? `${visibleAssets.length} of ${project.assets.length}`
+                  : `${project.assets.length} ${project.assets.length === 1 ? "asset" : "assets"}`}
+              </span>
             </div>
             <div className="grid grid-cols-2 gap-2.5">
-              {project.assets
-                .filter((a) =>
-                  a.name.toLowerCase().includes(search.toLowerCase()),
-                )
-                .map((a) => (
-                  <div
-                    key={a.id}
-                    role="group"
-                    aria-label={`Media ${a.name}`}
-                    tabIndex={0}
-                    aria-haspopup="menu"
-                    aria-expanded={context?.asset.id === a.id}
-                    draggable={false}
-                    onContextMenu={(e) => {
+              {visibleAssets.map((a) => (
+                <div
+                  key={a.id}
+                  role="group"
+                  aria-label={`Media ${a.name}`}
+                  tabIndex={0}
+                  aria-haspopup="menu"
+                  aria-expanded={context?.asset.id === a.id}
+                  draggable={false}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setContext({
+                      asset: a,
+                      x: e.clientX,
+                      y: e.clientY,
+                      trigger: e.currentTarget,
+                    });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.target !== e.currentTarget) return;
+                    if (
+                      e.key === "ContextMenu" ||
+                      (e.shiftKey && e.key === "F10")
+                    ) {
                       e.preventDefault();
                       e.stopPropagation();
+                      const rect = e.currentTarget.getBoundingClientRect();
                       setContext({
                         asset: a,
-                        x: e.clientX,
-                        y: e.clientY,
+                        x: rect.left,
+                        y: rect.bottom,
                         trigger: e.currentTarget,
                       });
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.target !== e.currentTarget) return;
-                      if (
-                        e.key === "ContextMenu" ||
-                        (e.shiftKey && e.key === "F10")
-                      ) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setContext({
-                          asset: a,
-                          x: rect.left,
-                          y: rect.bottom,
-                          trigger: e.currentTarget,
-                        });
-                      }
-                    }}
-                    onPointerDown={(e) => {
-                      if (
-                        e.button !== 0 ||
-                        e.ctrlKey ||
-                        !assetFiles.has(a.id) ||
-                        (e.target as HTMLElement).closest("button")
-                      )
-                        return;
-                      drag.current = {
-                        id: a.id,
-                        x: e.clientX,
-                        y: e.clientY,
-                        active: false,
-                      };
-                      e.currentTarget.setPointerCapture(e.pointerId);
-                    }}
-                    onPointerMove={(e) => {
-                      const d = drag.current;
-                      if (!d) return;
-                      if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 5)
-                        d.active = true;
-                      if (d.active)
-                        window.dispatchEvent(
-                          new CustomEvent("sequence-media-hover", {
-                            detail: { id: d.id, x: e.clientX, y: e.clientY },
-                          }),
-                        );
-                    }}
-                    onPointerUp={(e) => {
-                      const d = drag.current;
-                      drag.current = null;
-                      if (d?.active)
-                        window.dispatchEvent(
-                          new CustomEvent("sequence-media-drop", {
-                            detail: { id: d.id, x: e.clientX, y: e.clientY },
-                          }),
-                        );
-                    }}
-                    onPointerCancel={() => {
-                      drag.current = null;
+                    }
+                  }}
+                  onPointerDown={(e) => {
+                    if (
+                      e.button !== 0 ||
+                      e.ctrlKey ||
+                      !assetFiles.has(a.id) ||
+                      (e.target as HTMLElement).closest("button")
+                    )
+                      return;
+                    drag.current = {
+                      id: a.id,
+                      x: e.clientX,
+                      y: e.clientY,
+                      active: false,
+                    };
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                  }}
+                  onPointerMove={(e) => {
+                    const d = drag.current;
+                    if (!d) return;
+                    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 5)
+                      d.active = true;
+                    if (d.active)
                       window.dispatchEvent(
                         new CustomEvent("sequence-media-hover", {
-                          detail: null,
+                          detail: { id: d.id, x: e.clientX, y: e.clientY },
                         }),
                       );
-                    }}
-                    onDoubleClick={() => {
-                      if (assetFiles.has(a.id))
-                        store.safe(() => addAsset(a.id));
-                    }}
-                    className="group min-w-0 cursor-grab touch-none select-none"
-                    data-testid={`asset-${a.kind}`}
+                  }}
+                  onPointerUp={(e) => {
+                    const d = drag.current;
+                    drag.current = null;
+                    if (d?.active)
+                      window.dispatchEvent(
+                        new CustomEvent("sequence-media-drop", {
+                          detail: { id: d.id, x: e.clientX, y: e.clientY },
+                        }),
+                      );
+                  }}
+                  onPointerCancel={() => {
+                    drag.current = null;
+                    window.dispatchEvent(
+                      new CustomEvent("sequence-media-hover", {
+                        detail: null,
+                      }),
+                    );
+                  }}
+                  onDoubleClick={(event) => {
+                    if ((event.target as HTMLElement).closest("button")) return;
+                    if (assetFiles.has(a.id)) store.safe(() => addAsset(a.id));
+                  }}
+                  className={cn(
+                    "group min-w-0 touch-none rounded-lg outline-none select-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
+                    assetFiles.has(a.id)
+                      ? "cursor-grab active:cursor-grabbing"
+                      : "cursor-default",
+                  )}
+                  data-testid={`asset-${a.kind}`}
+                >
+                  <div
+                    className={cn(
+                      "relative flex aspect-square items-center justify-center overflow-hidden rounded-lg border transition-colors group-hover:border-zinc-400 [[data-theme=dark]_&]:group-hover:border-white/25",
+                      skin.border,
+                      skin.raised,
+                    )}
                   >
-                    <div
-                      className={cn(
-                        "relative flex aspect-video items-center justify-center overflow-hidden rounded-lg border",
-                        skin.border,
-                        skin.raised,
-                      )}
+                    {a.thumbnail ? (
+                      <img
+                        src={a.thumbnail}
+                        draggable={false}
+                        alt=""
+                        className="size-full object-cover"
+                      />
+                    ) : a.kind === "audio" ? (
+                      <MusicNotesIcon
+                        size={32}
+                        className="text-emerald-600 [[data-theme=dark]_&]:text-emerald-300"
+                      />
+                    ) : a.kind === "image" ? (
+                      <ImageIcon size={32} className={skin.muted} />
+                    ) : (
+                      <FilmStripIcon size={32} className={skin.muted} />
+                    )}
+                    <span className="absolute right-1.5 bottom-1.5 rounded bg-black/65 px-1.5 py-0.5 text-xs font-medium text-white tabular-nums">
+                      {a.kind === "image"
+                        ? "Image"
+                        : `${a.duration.toFixed(1)}s`}
+                    </span>
+                    <IconButton
+                      label={`Add ${a.name} to timeline`}
+                      size="sm"
+                      onClick={() => store.safe(() => addAsset(a.id))}
+                      disabled={!assetFiles.has(a.id)}
+                      className="absolute top-1 right-1 bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-black/80"
                     >
-                      {a.thumbnail ? (
-                        <img
-                          src={a.thumbnail}
-                          draggable={false}
-                          alt=""
-                          className="size-full object-cover"
-                        />
-                      ) : a.kind === "audio" ? (
-                        <MusicNotesIcon
-                          size={24}
-                          className="text-emerald-400"
-                        />
-                      ) : (
-                        <FilmStripIcon size={24} className={skin.muted} />
-                      )}
-                      <span className="absolute right-1.5 bottom-1 rounded bg-black/55 px-1 font-mono text-xs text-white">
-                        {a.duration.toFixed(1)}s
-                      </span>
-                      <IconButton
-                        label={`Add ${a.name} to timeline`}
-                        size="sm"
-                        onClick={() => store.safe(() => addAsset(a.id))}
-                        disabled={!assetFiles.has(a.id)}
-                        className="absolute top-1 right-1 bg-black/50 text-white opacity-0 group-hover:opacity-100 focus:opacity-100"
-                      >
-                        <PlusIcon size={18} />
-                      </IconButton>
-                      {!assetFiles.has(a.id) && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/75 text-xs text-amber-300">
-                          <span>File missing</span>
-                          <button
-                            type="button"
-                            aria-label={`Relink ${a.name}`}
-                            disabled={loading}
-                            onClick={() => chooseRelink(a)}
-                            onDoubleClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-1 rounded border border-amber-300/40 bg-black/50 px-2 py-1 text-xs text-white hover:bg-black/80 focus-visible:outline-2 focus-visible:outline-amber-300 disabled:opacity-50"
-                          >
-                            <FolderOpenIcon size={13} /> Relink file
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <div className="mt-1.5">
-                      <p
-                        className="min-w-0 flex-1 truncate text-xs"
-                        title={a.name}
-                      >
-                        {a.name}
-                      </p>
-                    </div>
-                    <p className={cn("mt-0.5 text-xs", skin.muted)}>
-                      {a.hdr
-                        ? "HDR · SDR preview"
-                        : a.kind === "audio"
-                          ? "Audio"
-                          : `${a.width} × ${a.height}`}
+                      <PlusIcon size={18} />
+                    </IconButton>
+                    {!assetFiles.has(a.id) && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/75 text-xs text-amber-300">
+                        <span>File missing</span>
+                        <button
+                          type="button"
+                          aria-label={`Relink ${a.name}`}
+                          disabled={loading}
+                          onClick={() => chooseRelink(a)}
+                          onDoubleClick={(e) => e.stopPropagation()}
+                          className="flex items-center gap-1 rounded border border-amber-300/40 bg-black/50 px-2 py-1 text-xs text-white hover:bg-black/80 focus-visible:outline-2 focus-visible:outline-amber-300 disabled:opacity-50"
+                        >
+                          <FolderOpenIcon size={13} /> Relink file
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-1.5">
+                    <p
+                      className="min-w-0 flex-1 truncate text-xs font-medium"
+                      title={a.name}
+                    >
+                      {a.name}
                     </p>
                   </div>
-                ))}
+                  <p className={cn("mt-0.5 text-xs", skin.muted)}>
+                    {a.hdr
+                      ? "HDR · SDR preview"
+                      : a.kind === "audio"
+                        ? "Audio"
+                        : `${a.width} × ${a.height}`}
+                  </p>
+                </div>
+              ))}
             </div>
+            {project.assets.length > 0 && visibleAssets.length === 0 && (
+              <div
+                role="status"
+                className="flex flex-col items-center gap-3 px-2 py-8 text-center"
+              >
+                <MagnifyingGlassIcon size={24} className={skin.muted} />
+                <p className="text-xs font-medium">No media found</p>
+                <p className={cn("text-xs leading-relaxed", skin.muted)}>
+                  Try another filename or clear your search.
+                </p>
+                <Button variant="ghost" onClick={() => setSearch("")}>
+                  Clear search
+                </Button>
+              </div>
+            )}
             {!project.assets.length && (
               <div
                 className={cn(
@@ -401,12 +431,8 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
                   skin.border,
                 )}
               >
-                <UploadSimpleIcon
-                  size={26}
-                  weight="thin"
-                  className={skin.muted}
-                />
-                <p className="text-xs">Your story starts here</p>
+                <UploadSimpleIcon size={28} className={skin.muted} />
+                <p className="text-sm font-medium">Add your first clip</p>
                 <p className={cn("text-xs leading-relaxed", skin.muted)}>
                   Drop videos, audio, or images.
                   <br />
@@ -418,12 +444,9 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
               </div>
             )}
             <div className="mt-auto pt-6">
-              <button
-                className={cn(
-                  "flex w-full items-center justify-between rounded-lg border p-3 text-left text-xs",
-                  skin.border,
-                  skin.hover,
-                )}
+              <Button
+                className="w-full justify-between text-left"
+                disabled={loading}
                 onClick={async () => {
                   setLoading(true);
                   try {
@@ -435,17 +458,15 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
                   }
                 }}
               >
-                <span>Explore with a sample project</span>
-                <ArrowUpRightIcon size={12} />
-              </button>
+                <span>Open sample project</span>
+                <ArrowUpRightIcon size={14} />
+              </Button>
             </div>
           </>
         ) : (
           <>
             <p className={cn("mb-4 text-xs leading-relaxed", skin.muted)}>
-              A few building blocks.
-              <br />
-              An endless number of stories.
+              Add text, shapes, and motion to your timeline.
             </p>
             <div className="grid grid-cols-2 gap-2">
               {[
@@ -501,7 +522,10 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
                     skin.hover,
                   )}
                 >
-                  <Icon size={28} weight="light" className="text-indigo-400" />
+                  <Icon
+                    size={28}
+                    className="text-indigo-600 [[data-theme=dark]_&]:text-indigo-300"
+                  />
                   {name}
                 </button>
               ))}

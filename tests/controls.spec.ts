@@ -161,3 +161,84 @@ for (const theme of ["light", "dark"] as const) {
     await page.screenshot({ path: testInfo.outputPath(`paint-${theme}.png`) });
   });
 }
+
+test("media search recovers from no matches and keyboard users can add an asset", async ({
+  page,
+}) => {
+  await page.goto("/#/editor");
+  await page
+    .getByLabel("Import media files", { exact: true })
+    .setInputFiles([
+      "public/demo/dusk.mp4",
+      "public/demo/ambient.wav",
+      "public/demo/coast.jpg",
+    ]);
+  const media = page.getByRole("complementary", { name: "Media and elements" });
+  await expect(media.getByRole("group", { name: /^Media / })).toHaveCount(3);
+  await page.getByLabel("Search media", { exact: true }).fill("not-a-file");
+  await expect(media.getByRole("status")).toContainText("No media found");
+  await media
+    .getByRole("button", { name: "Clear search", exact: true })
+    .click();
+  await expect(media.getByRole("group", { name: /^Media / })).toHaveCount(3);
+  const asset = media.getByRole("group", {
+    name: "Media dusk.mp4",
+    exact: true,
+  });
+  await asset.focus();
+  await asset.press("Tab");
+  const add = asset.getByRole("button", {
+    name: "Add dusk.mp4 to timeline",
+    exact: true,
+  });
+  await expect(add).toBeFocused();
+  await expect(add).toHaveCSS("opacity", "1");
+  await add.press("Enter");
+  await expect(
+    page.getByRole("button", { name: "Select segment dusk.mp4", exact: true }),
+  ).toHaveCount(1);
+});
+
+test("editor controls remain reachable at compact desktop widths", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/#/editor");
+  for (const width of [760, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const quality = page.getByRole("combobox", {
+      name: "Preview quality",
+      exact: true,
+    });
+    await expect(quality).toHaveCSS("border-top-width", "0px");
+    await expect(quality).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await expect(
+      page.getByRole("button", { name: "Play", exact: true }),
+    ).toBeInViewport();
+    const geometry = await page.locator("header").evaluate((header) => ({
+      width: header.clientWidth,
+      content: header.scrollWidth,
+    }));
+    expect(geometry.content).toBeLessThanOrEqual(geometry.width);
+    const appearance = await page
+      .getByRole("group", { name: "Appearance", exact: true })
+      .boundingBox();
+    const exportButton = await page
+      .getByRole("button", { name: "Export", exact: true })
+      .boundingBox();
+    expect(appearance!.height).toBe(exportButton!.height);
+    expect(appearance!.y).toBe(exportButton!.y);
+    const sizes = await page
+      .locator("#root")
+      .evaluate((root) => [
+        ...new Set(
+          [...root.querySelectorAll("button, input, p, h3, kbd, summary")]
+            .filter((node) => node.checkVisibility())
+            .map((node) => getComputedStyle(node).fontSize),
+        ),
+      ]);
+    expect(sizes.every((size) => size === "12px" || size === "14px")).toBe(
+      true,
+    );
+    await page.screenshot({ path: testInfo.outputPath(`editor-${width}.png`) });
+  }
+});

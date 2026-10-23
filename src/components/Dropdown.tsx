@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { cn, skin } from "./ui";
+import { editor } from "./editor-ui";
 
 export function Dropdown({
   label,
@@ -37,16 +38,15 @@ export function Dropdown({
     >
       <summary
         aria-label={label}
-        className="flex cursor-pointer list-none items-center gap-2 text-sm"
+        className={cn(
+          "-mx-2 flex h-8 cursor-pointer list-none items-center gap-2 rounded-md px-2 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 [&::-webkit-details-marker]:hidden",
+          skin.hover,
+        )}
       >
         {trigger}
       </summary>
       <div
-        className={cn(
-          "absolute top-8 left-0 z-40 w-60 rounded-lg border p-1.5 shadow-xl",
-          skin.panel,
-          skin.border,
-        )}
+        className={cn("absolute top-10 left-0 z-40 w-60", editor.menu)}
         onClickCapture={(e) => {
           if ((e.target as Element).closest("button,a"))
             ref.current!.open = false;

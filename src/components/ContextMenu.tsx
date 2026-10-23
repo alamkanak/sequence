@@ -1,7 +1,8 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Button, cn, skin } from "./ui";
+import { Button, cn } from "./ui";
 import { menuPosition } from "./menu-position";
+import { editor } from "./editor-ui";
 export interface ContextMenuItem {
   label: string;
   icon?: ReactNode;
@@ -80,9 +81,8 @@ export function ContextMenu({
         role="menu"
         aria-label={label}
         className={cn(
-          "w-52 self-start justify-self-start rounded-lg border p-1 shadow-2xl text-zinc-900 [[data-theme=dark]_&]:text-zinc-100",
-          skin.panel,
-          skin.border,
+          "w-52 self-start justify-self-start",
+          editor.menu,
           menuPosition(x, y, window.innerWidth, window.innerHeight),
         )}
       >

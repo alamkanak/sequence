@@ -65,7 +65,6 @@ export function drawTimelineAudio(
       ctx.fillRect(x + px, baseline - h, 2, h);
     }
   } else {
-    ctx.font = "12px system-ui";
     ctx.fillStyle = "#78958d";
     const label =
       entry?.status === "error"

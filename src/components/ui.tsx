@@ -39,13 +39,13 @@ export function Button({
     <button
       {...props}
       className={cn(
-        "inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 disabled:cursor-not-allowed disabled:opacity-40 [&_svg]:shrink-0",
+        "inline-flex shrink-0 items-center justify-center gap-2 rounded-md font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:cursor-not-allowed disabled:opacity-40 [&_svg]:shrink-0",
         textSize === "sm" ? "text-sm" : "text-xs",
-        iconOnly ? "p-0" : "px-3 py-2",
+        iconOnly ? "p-0" : "min-h-8 px-3 py-1.5",
         variant === "primary"
-          ? "bg-indigo-500 text-white hover:bg-indigo-400"
+          ? "bg-indigo-600 text-white hover:bg-indigo-700"
           : variant === "danger"
-            ? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+            ? "bg-red-500/10 text-red-600 hover:bg-red-500/15 [[data-theme=dark]_&]:text-red-400"
             : variant === "ghost"
               ? skin.hover
               : cn("border", skin.border, skin.panel, skin.hover),
@@ -63,7 +63,7 @@ export function IconButton({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   label: string;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
 }) {
   return (
     <Button
@@ -73,7 +73,13 @@ export function IconButton({
       iconOnly
       {...props}
       className={cn(
-        size === "lg" ? "size-10" : size === "sm" ? "size-8" : "size-9",
+        size === "lg"
+          ? "size-10"
+          : size === "sm"
+            ? "size-8"
+            : size === "xs"
+              ? "size-7"
+              : "size-9",
         props.className,
       )}
     >
@@ -130,7 +136,7 @@ export function Section({
 }) {
   return (
     <section className={cn("space-y-3 border-b px-4 py-4", skin.border)}>
-      <h3 className="text-xs font-medium">{title}</h3>
+      <h3 className="text-xs font-semibold">{title}</h3>
       {children}
     </section>
   );
@@ -215,7 +221,13 @@ export function Modal({
   );
 }
 export type Theme = "system" | "light" | "dark";
-export function ThemePicker({ className }: { className?: string }) {
+export function ThemePicker({
+  className,
+  compact = false,
+}: {
+  className?: string;
+  compact?: boolean;
+}) {
   const [theme, setTheme] = useState<Theme>(() => {
     try {
       return (localStorage.getItem("sequence-theme") as Theme) || "system";
@@ -240,6 +252,7 @@ export function ThemePicker({ className }: { className?: string }) {
       className={cn(
         "flex items-center gap-0.5 rounded-lg border p-0.5",
         skin.border,
+        compact && "h-9",
         className,
       )}
     >
@@ -252,6 +265,7 @@ export function ThemePicker({ className }: { className?: string }) {
       ).map(({ value, Icon }) => (
         <IconButton
           key={value}
+          size={compact ? "xs" : "md"}
           label={`${value[0].toUpperCase() + value.slice(1)} appearance`}
           aria-pressed={theme === value}
           onClick={() => setTheme(value)}
