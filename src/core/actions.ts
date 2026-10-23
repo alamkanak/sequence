@@ -32,33 +32,114 @@ export function pasteTimelineClip() {
     transport.seek(transport.time);
   });
 }
+async function attachFile(asset: Asset, file: File, existing = false) {
+  const p = store.get().project;
+  transport.pause();
+  assetFiles.set(asset.id, file);
+  transport.engine?.setFile(asset.id, file);
+  prepareWaveform(asset, file);
+  const project = {
+    ...p,
+    assets: existing
+      ? p.assets.map((a) => (a.id === asset.id ? asset : a))
+      : [...p.assets, asset],
+    revision: p.revision + 1,
+  };
+  if (existing) {
+    // Restoring file access must notify the UI and renderer without adding an
+    // edit to undo or discarding a pending redo.
+    store.patch({ project, dirty: true, error: "" });
+  } else store.replace(project);
+  transport.seek(transport.time);
+  try {
+    await put("files", asset.id, file);
+  } catch {
+    store.patch({
+      error: `${file.name} is available for this session, but could not be saved in browser storage. Keep the original file to relink next time.`,
+    });
+  }
+  if (asset.hdr)
+    store.patch({
+      error:
+        "HDR source detected. Preview is SDR; export requires explicit SDR tone-mapping consent.",
+    });
+}
+
+/** Explicit selection can restore renamed/moved media while keeping every clip. */
+export async function relinkAsset(id: string, file: File) {
+  const before = store.get().project;
+  const original = before.assets.find((a) => a.id === id);
+  if (!original) throw new Error("This media is no longer in the project");
+  if (assetFiles.has(id)) throw new Error("This media is already linked");
+  const inspected = await inspectMedia(file);
+  const current = store.get().project;
+  if (current.id !== before.id || !current.assets.some((a) => a.id === id))
+    throw new Error("The project changed. Choose the missing file again.");
+  if (inspected.kind !== original.kind)
+    throw new Error(
+      `Choose a ${original.kind} file to relink ${original.name}.`,
+    );
+  if (inspected.kind === "video" || inspected.kind === "audio") {
+    const needed = Math.max(
+      0,
+      ...current.clips
+        .filter((c) => c.assetId === id)
+        .map((c) => c.in + c.duration * c.speed),
+    );
+    if (inspected.duration + 1 / (inspected.fps || 30) < needed)
+      throw new Error(
+        `${file.name} is too short for the existing edits. Choose the original media (${needed.toFixed(1)}s needed).`,
+      );
+  }
+  await attachFile({ ...inspected, id }, file, true);
+}
+
+/** Bulk restore uses exact identity hints; renamed files use explicit selection. */
+export async function relinkFiles(files: File[]) {
+  const missing = store
+    .get()
+    .project.assets.filter((a) => !assetFiles.has(a.id));
+  const projectId = store.get().project.id;
+  let linked = 0;
+  const used = new Set<File>();
+  for (const asset of missing) {
+    const matches = files.filter(
+      (f) => f.name === asset.name && f.size === asset.size,
+    );
+    if (matches.length !== 1) continue;
+    if (store.get().project.id !== projectId)
+      throw new Error("The project changed. Choose the missing files again.");
+    if (!store.get().project.assets.some((a) => a.id === asset.id)) continue;
+    await attachFile(asset, matches[0], true);
+    used.add(matches[0]);
+    linked++;
+  }
+  return {
+    linked,
+    unmatched: files.filter((f) => !used.has(f)).map((f) => f.name),
+  };
+}
+
 export async function importFiles(files: File[]) {
   for (const file of files) {
     try {
+      const projectId = store.get().project.id;
       const existing = store
         .get()
-        .project.assets.find(
+        .project.assets.filter(
           (a) =>
             a.name === file.name &&
             a.size === file.size &&
             !assetFiles.has(a.id),
         );
-      const asset = existing || (await inspectMedia(file));
-      assetFiles.set(asset.id, file);
-      prepareWaveform(asset, file);
-      transport.engine?.setFile(asset.id, file);
-      await put("files", asset.id, file);
-      if (!existing)
-        store.replace({
-          ...store.get().project,
-          assets: [...store.get().project.assets, asset],
-          revision: store.get().project.revision + 1,
-        });
-      if (asset.hdr)
-        store.patch({
-          error:
-            "HDR source detected. Preview is SDR; export requires explicit SDR tone-mapping consent.",
-        });
+      if (existing.length) {
+        await relinkFiles([file]);
+      } else {
+        const asset = await inspectMedia(file);
+        if (store.get().project.id !== projectId)
+          throw new Error("The project changed. Import the file again.");
+        await attachFile(asset, file);
+      }
     } catch (e) {
       store.patch({
         error: `${file.name}: ${e instanceof Error ? e.message : e}`,

@@ -21,6 +21,11 @@ Media and the current project autosave in your browser. Nothing is uploaded.
 Clearing site data removes these copies. Saved project JSON does not include media;
 keep the original files to reopen projects on another browser or device.
 
+If media goes missing, click **Relink files…** in the Media panel and select the
+original files together. Sequence matches their names and sizes. For a renamed
+file, click **Relink file** on its missing asset and choose its new location.
+Your timeline edits stay in place, and relinked media is saved in this browser.
+
 Use desktop Chrome or Edge for the best support. Codec support depends on your
 browser and device. Exports are currently SDR; HDR preservation is not supported.
 

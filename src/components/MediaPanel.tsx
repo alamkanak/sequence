@@ -13,6 +13,8 @@ import {
   MagnifyingGlassIcon,
   ArrowUpRightIcon,
   TrashIcon,
+  FolderOpenIcon,
+  WarningCircleIcon,
 } from "./icons";
 import { useStore, store } from "../core/store";
 import {
@@ -21,6 +23,8 @@ import {
   importFiles,
   loadDemo,
   removeAsset,
+  relinkAsset,
+  relinkFiles,
 } from "../core/actions";
 import { createFileDropTarget } from "../core/file-drop";
 import type { Asset } from "../core/model";
@@ -40,6 +44,43 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
     [search, setSearch] = useState(""),
     [dropping, setDropping] = useState(false),
     [removing, setRemoving] = useState<Asset | null>(null);
+  const relinkPicker = useRef<HTMLInputElement>(null);
+  const relinkTarget = useRef<Asset | null>(null);
+  const [relinkResult, setRelinkResult] = useState("");
+  const missing = project.assets.filter((a) => !assetFiles.has(a.id));
+  function chooseRelink(asset: Asset | null) {
+    relinkTarget.current = asset;
+    if (relinkPicker.current) {
+      relinkPicker.current.multiple = !asset;
+      relinkPicker.current.click();
+    }
+  }
+  async function restoreMedia(files: File[]) {
+    if (!files.length) return;
+    const target = relinkTarget.current;
+    setLoading(true);
+    setRelinkResult("");
+    try {
+      if (target) {
+        await relinkAsset(target.id, files[0]);
+        setRelinkResult(`Relinked ${target.name}. Timeline edits preserved.`);
+      } else {
+        const result = await relinkFiles(files);
+        setRelinkResult(
+          `Relinked ${result.linked} ${result.linked === 1 ? "file" : "files"}.` +
+            (result.unmatched.length
+              ? ` No unique name and size match for: ${result.unmatched.join(", ")}. Use Relink file on the missing asset to choose it directly.`
+              : " Timeline edits preserved."),
+        );
+      }
+    } catch (error) {
+      store.patch({
+        error: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
   const [context, setContext] = useState<{
     asset: Asset;
     x: number;
@@ -105,6 +146,18 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
         {tab === "media" ? (
           <>
             <input
+              ref={relinkPicker}
+              type="file"
+              accept="video/*,audio/*,image/*,.mkv,.mov,.m4a,.flac"
+              className="hidden"
+              aria-label="Relink missing media files"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                e.target.value = "";
+                void restoreMedia(files);
+              }}
+            />
+            <input
               ref={picker}
               type="file"
               multiple
@@ -125,6 +178,35 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
               {loading ? "Reading media…" : "Import media"}
               <span className={cn("ml-auto text-xs", skin.muted)}>⌘I</span>
             </Button>
+            {missing.length > 0 && (
+              <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                <p className="flex items-center gap-2 text-xs font-medium text-amber-700 [[data-theme=dark]_&]:text-amber-300">
+                  <WarningCircleIcon size={16} />
+                  {missing.length} {missing.length === 1 ? "file" : "files"}{" "}
+                  missing
+                </p>
+                <p className={cn("mt-2 text-xs leading-relaxed", skin.muted)}>
+                  Choose the original files together. If a file was renamed, use
+                  its Relink file button below. Your edits stay in place.
+                </p>
+                <Button
+                  onClick={() => chooseRelink(null)}
+                  disabled={loading}
+                  className="mt-3 w-full"
+                >
+                  <FolderOpenIcon size={15} />
+                  {loading ? "Reading media…" : "Relink files…"}
+                </Button>
+              </div>
+            )}
+            {relinkResult && (
+              <p
+                role="status"
+                className={cn("mt-3 text-xs leading-relaxed", skin.muted)}
+              >
+                {relinkResult}
+              </p>
+            )}
             <div className="relative mt-3">
               <MagnifyingGlassIcon
                 size={13}
@@ -237,7 +319,10 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
                         }),
                       );
                     }}
-                    onDoubleClick={() => store.safe(() => addAsset(a.id))}
+                    onDoubleClick={() => {
+                      if (assetFiles.has(a.id))
+                        store.safe(() => addAsset(a.id));
+                    }}
                     className="group min-w-0 cursor-grab touch-none select-none"
                     data-testid={`asset-${a.kind}`}
                   >
@@ -276,9 +361,19 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
                         <PlusIcon size={18} />
                       </IconButton>
                       {!assetFiles.has(a.id) && (
-                        <span className="absolute inset-0 flex items-center justify-center bg-black/70 text-xs text-amber-300">
-                          Import to relink
-                        </span>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/75 text-xs text-amber-300">
+                          <span>File missing</span>
+                          <button
+                            type="button"
+                            aria-label={`Relink ${a.name}`}
+                            disabled={loading}
+                            onClick={() => chooseRelink(a)}
+                            onDoubleClick={(e) => e.stopPropagation()}
+                            className="flex items-center gap-1 rounded border border-amber-300/40 bg-black/50 px-2 py-1 text-xs text-white hover:bg-black/80 focus-visible:outline-2 focus-visible:outline-amber-300 disabled:opacity-50"
+                          >
+                            <FolderOpenIcon size={13} /> Relink file
+                          </button>
+                        </div>
                       )}
                     </div>
                     <div className="mt-1.5">
@@ -472,6 +567,16 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
           trigger={context.trigger}
           onClose={() => setContext(null)}
           items={[
+            ...(!assetFiles.has(context.asset.id)
+              ? [
+                  {
+                    label: "Relink file…",
+                    icon: <FolderOpenIcon size={16} />,
+                    disabled: loading,
+                    onSelect: () => chooseRelink(context.asset),
+                  },
+                ]
+              : []),
             {
               label: "Add to timeline",
               icon: <PlusIcon size={16} />,
