@@ -15,6 +15,7 @@ import {
 import { loadDemo } from "../core/actions";
 import { store } from "../core/store";
 import { Button, ThemePicker, cn, skin } from "./ui";
+import { AiEditingSection, AI_SETUP_URL } from "./AiEditingSection";
 const asset = (name: string) => `${import.meta.env.BASE_URL}demo/${name}`;
 function ProductPreview() {
   return (
@@ -200,11 +201,11 @@ export function Landing() {
             <a className="hover:text-indigo-400" href="#features">
               The editor
             </a>
+            <a className="hover:text-indigo-400" href="#ai-editing">
+              AI editing
+            </a>
             <a className="hover:text-indigo-400" href="#privacy">
               Local by design
-            </a>
-            <a className="hover:text-indigo-400" href="#workflow">
-              Your workflow
             </a>
           </div>
           <div className="flex items-center gap-3">
@@ -225,7 +226,7 @@ export function Landing() {
             )}
           >
             <span className="size-1.5 rounded-full bg-indigo-400" />
-            Your device. Your footage. Your space.
+            AI agent editing · Built-in MCP server
           </div>
           <h1 className="max-w-4xl text-5xl leading-[1.07] font-medium tracking-[-0.055em] md:text-7xl lg:text-[82px]">
             Make room for
@@ -234,13 +235,13 @@ export function Landing() {
           </h1>
           <p
             className={cn(
-              "mt-6 max-w-lg text-base leading-relaxed md:text-lg",
+              "mt-6 max-w-xl text-base leading-relaxed md:text-lg",
               skin.muted,
             )}
           >
-            A focused video editor that lives in your browser.
-            <br className="hidden sm:block" />
-            From the first cut to the final frame, all on your device.
+            Edit videos yourself, or work with Claude Code, Codex, and other AI
+            agents through Sequence’s MCP server. Preview and render locally,
+            right in your browser.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button
@@ -251,6 +252,17 @@ export function Landing() {
             >
               Start creating <ArrowRightIcon size={15} />
             </Button>
+            <a
+              href={AI_SETUP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                "inline-flex items-center gap-2 rounded-lg border px-5 py-3 text-sm font-medium transition-colors hover:border-indigo-400/60 hover:text-indigo-400",
+                skin.border,
+              )}
+            >
+              Set up AI editing <ArrowUpRightIcon size={16} />
+            </a>
             <Button
               textSize="sm"
               variant="ghost"
@@ -274,6 +286,7 @@ export function Landing() {
         >
           <ProductPreview />
         </button>
+        <AiEditingSection />
         <section
           id="features"
           className={cn(

@@ -1,19 +1,52 @@
 # Sequence
 
-A video editor that runs in your browser. No uploads, accounts, or backend.
+A browser video editor for you and your AI agent. Edit by hand or let
+**Claude Code, Codex, Cursor, and other MCP-compatible agents** work on your
+timeline through the built-in **MCP server**. Preview and render on your device.
 
-**[Open Sequence](https://alamkanak.github.io/sequence/)**
+**[Open Sequence](https://alamkanak.github.io/sequence/)** · **[Set up AI editing](#ai-editing-with-mcp)**
 
 ![Sequence video editor with a multitrack timeline and preview](docs/images/screenshot.png)
 
 ## What you can do
 
+- Ask Claude Code or Codex to edit your project through MCP.
 - Import video, audio, and images into a multitrack timeline.
 - Trim, split, change speed, and adjust audio with volume points.
 - Add text, shapes, gradients, animations, and transitions.
 - Preview your edits and export MP4 or WebM on your device.
 
 Includes resizable panels, snapping, undo/redo, and light/dark themes.
+
+## AI editing with MCP
+
+Connect **Claude Code, Codex, Cursor**, or another local MCP client to Sequence.
+Ask for edits in plain language, then review them in the timeline.
+
+> “Trim the opening, add a title, and fade the music out.”
+
+No clone or build needed. Install [Node.js 24+](https://nodejs.org/), then add this
+local server to your AI app's MCP settings (Claude Desktop/Cursor format):
+
+```json
+{
+  "mcpServers": {
+    "sequence": {
+      "command": "npx",
+      "args": ["--yes", "https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.1.0.tgz"]
+    }
+  }
+}
+```
+
+Restart or refresh your AI app's MCP connection. Ask your agent to **connect to
+Sequence**. It calls `connect_editor` and gives you a link to the GitHub Pages
+editor. Open it, approve **Connect AI agent**, and allow local network access if
+prompted. Keep that tab open while the agent edits.
+
+The companion runs locally; editing and rendering stay in your browser. Your
+agent receives project data and any previews it requests. Requires an AI app
+with local MCP support. [Other clients and setup details](docs/MCP.md).
 
 ## Your files stay local
 
@@ -46,31 +79,6 @@ In **Settings → Pages**, select **GitHub Actions** as the source.
 Push to `main` or run the included **Deploy to GitHub Pages** workflow.
 
 The site will be at **https://alamkanak.github.io/sequence/**.
-
-## AI editing
-
-No clone or build needed. Install [Node.js 24+](https://nodejs.org/), then add this
-local server to your AI app's MCP settings (Claude Desktop/Cursor format):
-
-```json
-{
-  "mcpServers": {
-    "sequence": {
-      "command": "npx",
-      "args": ["--yes", "https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.1.0.tgz"]
-    }
-  }
-}
-```
-
-Restart or refresh your AI app's MCP connection. Ask your agent to **connect to
-Sequence**. It calls `connect_editor` and gives you a link to the GitHub Pages
-editor. Open it, approve **Connect AI agent**, and allow local network access if
-prompted. Keep that tab open while the agent edits.
-
-The companion runs locally; editing and rendering stay in your browser. Your
-agent receives project data and any previews it requests. Requires an AI app
-with local MCP support. [Other clients and setup details](docs/MCP.md).
 
 ## Development
 
