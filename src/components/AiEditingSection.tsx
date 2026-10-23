@@ -1,5 +1,6 @@
 import { ArrowUpRightIcon, CommandIcon } from "./icons";
 import { cn, skin } from "./ui";
+import { landing, landingAction } from "./landing-ui";
 
 export const AI_SETUP_URL =
   "https://github.com/alamkanak/sequence#ai-editing-with-mcp";
@@ -8,75 +9,79 @@ export function AiEditingSection() {
   return (
     <section
       id="ai-editing"
+      aria-labelledby="ai-heading"
       className={cn(
-        "grid scroll-mt-8 gap-10 border-b py-20 md:grid-cols-2 md:items-center md:gap-16",
+        landing.section,
+        "grid items-center gap-10 border-b md:grid-cols-2 md:gap-16",
         skin.border,
       )}
     >
       <div>
-        <p className="mb-4 text-xs font-medium tracking-[0.2em] text-indigo-400 uppercase">
-          AI agent editing · MCP
-        </p>
-        <h2 className="text-4xl leading-tight font-medium tracking-[-0.04em]">
+        <p className={landing.eyebrow}>AI editing</p>
+        <h2 id="ai-heading" className={cn("mt-3", landing.heading)}>
           Your timeline.
           <br />
           Your AI collaborator.
         </h2>
-        <p className={cn("mt-5 max-w-lg text-sm leading-relaxed", skin.muted)}>
+        <p className={cn("mt-4 max-w-lg", landing.body)}>
           Work with Claude Code, Codex, Cursor, or another MCP-compatible agent.
-          Sequence’s MCP server lets your agent arrange clips, trim footage, add
-          titles, adjust audio, and export your video. Review every edit in the
-          same timeline you use by hand.
+          Ask it to arrange clips, trim footage, add titles, or adjust audio.
+          Review every change in the same timeline you use by hand.
         </p>
         <a
           href={AI_SETUP_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-indigo-400 hover:text-indigo-300"
+          className={cn("mt-6", landingAction("secondary"))}
         >
-          Connect your AI agent <ArrowUpRightIcon size={17} />
+          Set up AI editing <ArrowUpRightIcon size={16} aria-hidden="true" />
         </a>
-        <p className={cn("mt-3 text-xs leading-relaxed", skin.muted)}>
-          A local MCP connection. No repository clone or app build needed.
+        <p className={cn("mt-3", landing.note)}>
+          Connect through Sequence’s local MCP server. No app build needed.
         </p>
       </div>
       <div
-        className={cn("rounded-xl border p-6 md:p-8", skin.border, skin.panel)}
+        className={cn("rounded-2xl border p-6 md:p-8", skin.border, skin.panel)}
       >
-        <div className="flex flex-wrap items-center gap-2">
-          <CommandIcon size={20} className="mr-1 text-indigo-400" />
-          {["Claude Code", "Codex", "Cursor"].map((agent) => (
-            <span
-              key={agent}
-              className={cn(
-                "rounded-md border px-2.5 py-1.5 text-xs",
-                skin.border,
-              )}
-            >
-              {agent}
-            </span>
-          ))}
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <CommandIcon
+            size={20}
+            className="text-indigo-600 [[data-theme=dark]_&]:text-indigo-300"
+            aria-hidden="true"
+          />
+          An edit, in your own words
         </div>
-        <p className="mt-6 max-w-sm text-xl leading-relaxed font-medium tracking-tight">
+        <blockquote
+          className={cn(
+            "mt-5 rounded-xl border-l-2 border-indigo-500 bg-indigo-500/5 p-5",
+            landing.title,
+          )}
+        >
           “Trim the opening, add a title, and fade the music out.”
-        </p>
-        <ol className={cn("mt-7 space-y-4 border-t pt-6", skin.border)}>
+        </blockquote>
+        <ol className="mt-6 space-y-4">
           {[
             "Connect your agent to Sequence.",
             "Approve access to your open project.",
-            "Ask for an edit. Review it in the timeline.",
+            "Ask for an edit. Review the result.",
           ].map((step, index) => (
-            <li key={step} className="flex items-baseline gap-3 text-sm">
-              <span className={cn("font-mono text-xs", skin.muted)}>
+            <li
+              key={step}
+              className="flex items-baseline gap-3 text-base leading-relaxed"
+            >
+              <span
+                aria-hidden="true"
+                className="text-sm font-semibold text-indigo-600 [[data-theme=dark]_&]:text-indigo-300"
+              >
                 0{index + 1}
               </span>
               {step}
             </li>
           ))}
         </ol>
-        <p className={cn("mt-6 text-xs leading-relaxed", skin.muted)}>
-          Rendering stays in your browser. Your connected AI client receives
-          project data and any preview images it requests.
+        <p className={cn("mt-6 border-t pt-5", skin.border, landing.note)}>
+          Works with Claude Code, Codex, Cursor, and other MCP clients.
+          Rendering stays in your browser.
         </p>
       </div>
     </section>

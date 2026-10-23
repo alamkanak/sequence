@@ -228,7 +228,7 @@ export function Modal({
   );
 }
 export type Theme = "system" | "light" | "dark";
-export function ThemePicker() {
+export function ThemePicker({ className }: { className?: string }) {
   const [theme, setTheme] = useState<Theme>(() => {
     try {
       return (localStorage.getItem("sequence-theme") as Theme) || "system";
@@ -248,9 +248,12 @@ export function ThemePicker() {
   }, [theme]);
   return (
     <div
+      role="group"
+      aria-label="Appearance"
       className={cn(
         "flex items-center gap-0.5 rounded-lg border p-0.5",
         skin.border,
+        className,
       )}
     >
       {(
@@ -267,7 +270,8 @@ export function ThemePicker() {
           onClick={() => setTheme(value)}
           className={cn(
             "rounded-md",
-            theme === value && "bg-indigo-500/15 text-indigo-400",
+            theme === value &&
+              "bg-indigo-500/10 text-indigo-600 [[data-theme=dark]_&]:bg-indigo-500/15 [[data-theme=dark]_&]:text-indigo-300",
           )}
         >
           <Icon size={18} />

@@ -24,6 +24,7 @@ export { HouseIcon } from "@phosphor-icons/react/dist/csr/House";
 export { ImageIcon } from "@phosphor-icons/react/dist/csr/Image";
 export { KeyboardIcon } from "@phosphor-icons/react/dist/csr/Keyboard";
 export { LightningIcon } from "@phosphor-icons/react/dist/csr/Lightning";
+export { ListIcon } from "@phosphor-icons/react/dist/csr/List";
 export { LockKeyIcon } from "@phosphor-icons/react/dist/csr/LockKey";
 export { LockSimpleIcon } from "@phosphor-icons/react/dist/csr/LockSimple";
 export { LockSimpleOpenIcon } from "@phosphor-icons/react/dist/csr/LockSimpleOpen";
