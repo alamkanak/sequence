@@ -62,3 +62,7 @@ npm run build
 ```
 
 Performance measurements and benchmark instructions: [BENCHMARK.md](BENCHMARK.md).
+
+## License
+
+Copyright © 2026 Raquib Ul Alam. Licensed under [GNU AGPLv3](LICENSE) (`AGPL-3.0-only`).
