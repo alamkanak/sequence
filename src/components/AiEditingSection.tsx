@@ -53,7 +53,7 @@ export function AiEditingSection() {
         </div>
         <blockquote
           className={cn(
-            "mt-5 rounded-xl border-l-2 border-indigo-500 bg-indigo-500/5 p-5",
+            "mt-5 rounded-xl bg-indigo-500/5 p-5",
             landing.title,
           )}
         >
