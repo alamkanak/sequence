@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { newClip } from "../src/core/model.ts";
 const child = spawn(
   process.execPath,
-  ["companion/server.mjs", "--allow-media", resolve("public/demo")],
+  ["companion/server.mjs", "--local", "--allow-media", resolve("public/demo")],
   {
     env: { ...process.env, SEQUENCE_PORT: process.env.TEST_MCP_PORT || "4180" },
     stdio: ["pipe", "pipe", "pipe"],
@@ -136,7 +136,7 @@ try {
     date: new Date().toISOString(),
     checks: [
       "stdio handshake",
-      "six-tool discovery",
+      "seven-tool discovery",
       "browser pairing",
       "allowlisted file import",
       "asset placement",

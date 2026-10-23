@@ -44,12 +44,28 @@ The site will be at **https://alamkanak.github.io/sequence/**.
 
 ## AI editing
 
-An optional local MCP companion lets AI clients control a paired editor tab.
-Configure your MCP client to launch `node /path/to/sequence/companion/server.mjs`
-after running `npm run build`. Add `--allow-media /path/to/media` to allow local
-media imports. Open the editor URL printed by the companion and keep it open.
+No clone or build needed. Install [Node.js 24+](https://nodejs.org/), then add this
+local server to your AI app's MCP settings (Claude Desktop/Cursor format):
 
-The companion runs on your computer; it is separate from the GitHub Pages site.
+```json
+{
+  "mcpServers": {
+    "sequence": {
+      "command": "npx",
+      "args": ["--yes", "https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.1.0.tgz"]
+    }
+  }
+}
+```
+
+Restart or refresh your AI app's MCP connection. Ask your agent to **connect to
+Sequence**. It calls `connect_editor` and gives you a link to the GitHub Pages
+editor. Open it, approve **Connect AI agent**, and allow local network access if
+prompted. Keep that tab open while the agent edits.
+
+The companion runs locally; editing and rendering stay in your browser. Your
+agent receives project data and any previews it requests. Requires an AI app
+with local MCP support. [Other clients and setup details](docs/MCP.md).
 
 ## Development
 

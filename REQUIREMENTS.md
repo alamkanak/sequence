@@ -32,7 +32,8 @@
 
 ## AI editing through MCP
 
-- Expose six generalized tools: `inspect_project`, `manage_assets`, `apply_edits`, `preview_frame`, `export_video`, and `manage_jobs`.
+- Expose seven generalized tools: `connect_editor`, `inspect_project`, `manage_assets`, `apply_edits`, `preview_frame`, `export_video`, and `manage_jobs`.
+- Install through `npx` from a package published with the Pages build; no repository clone or user build. Pair the hosted editor with explicit browser approval.
 - Inspect state, IDs, schemas, and capabilities; manage only user-selected files or allowed local directories.
 - `apply_edits`: typed batches for project/tracks/clips/elements/keyframes and undo/redo; expected revision, idempotency key, validation-only mode, structured errors.
 - Preview a timestamp; export asynchronously; inspect/cancel jobs. Require an open editor and report disconnection.

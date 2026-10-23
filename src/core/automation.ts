@@ -6,6 +6,10 @@ import { exports } from "../engine/export";
 import { addAsset, importFiles } from "./actions";
 import { canEncodeVideo, canEncodeAudio } from "mediabunny";
 import { elementManifest } from "../engine/elements";
+import {
+  parseCompanionLink,
+  withoutCompanionCredentials,
+} from "./companion-link";
 const receipts = new Map<string, unknown>();
 export async function handleTool(name: string, args: Record<string, any>) {
   const p = store.get().project;
@@ -168,31 +172,86 @@ export async function handleTool(name: string, args: Record<string, any>) {
   }
   throw new Error(`Unknown tool: ${name}`);
 }
-export function connectCompanion() {
-  const token = location.hash.split("token=")[1]?.split("&")[0];
-  if (!token || !["localhost", "127.0.0.1"].includes(location.hostname)) return;
-  const ws = new WebSocket(
-    `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/bridge?token=${encodeURIComponent(token)}`,
-  );
-  ws.onmessage = async (e) => {
-    const m = JSON.parse(e.data);
+export function connectCompanion(
+  requestApproval: (connect: () => void) => void,
+) {
+  let ws: WebSocket | undefined;
+  let disposed = false;
+  const offerConnection = () => {
     try {
-      const result = await handleTool(m.tool, m.args);
-      ws.send(JSON.stringify({ id: m.id, result }));
-    } catch (error) {
-      ws.send(
-        JSON.stringify({
-          id: m.id,
-          error: error instanceof Error ? error.message : String(error),
-        }),
+      const pairing = parseCompanionLink(location.href);
+      if (!pairing) return;
+      history.replaceState(
+        history.state,
+        "",
+        withoutCompanionCredentials(location.href),
       );
+      requestApproval(() => {
+        const open = () => {
+          if (disposed) return;
+          try {
+            const socket = new WebSocket(
+              `${pairing.endpoint}?token=${pairing.token}`,
+            );
+            ws = socket;
+            socket.onmessage = async (e) => {
+              let id: string | undefined;
+              try {
+                const m = JSON.parse(e.data);
+                id = m.id;
+                const result = await handleTool(m.tool, m.args);
+                if (socket.readyState === WebSocket.OPEN)
+                  socket.send(JSON.stringify({ id, result }));
+              } catch (error) {
+                if (id && socket.readyState === WebSocket.OPEN)
+                  socket.send(
+                    JSON.stringify({
+                      id,
+                      error:
+                        error instanceof Error ? error.message : String(error),
+                    }),
+                  );
+              }
+            };
+            socket.onopen = () => {
+              if (ws === socket)
+                store.patch({
+                  error:
+                    "AI agent connected to this project. Close this tab to disconnect.",
+                });
+            };
+            socket.onclose = () => {
+              if (ws === socket && !disposed)
+                store.patch({
+                  error:
+                    "MCP disconnected. Ask your agent for a new connection link; allow local network access if prompted and connect only one tab.",
+                });
+            };
+          } catch {
+            store.patch({
+              error:
+                "Could not connect to the local MCP companion. Use desktop Chrome or Edge and allow local network access for this site.",
+            });
+          }
+        };
+        if (ws && ws.readyState !== WebSocket.CLOSED) {
+          const old = ws;
+          ws = undefined;
+          old.addEventListener("close", open, { once: true });
+          old.close();
+        } else open();
+      });
+    } catch (error) {
+      store.patch({
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   };
-  ws.onopen = () =>
-    store.patch({ error: "Local MCP companion connected to this editor." });
-  ws.onclose = () =>
-    store.patch({
-      error: "MCP companion disconnected. Local editing remains available.",
-    });
-  return () => ws.close();
+  window.addEventListener("hashchange", offerConnection);
+  offerConnection();
+  return () => {
+    disposed = true;
+    window.removeEventListener("hashchange", offerConnection);
+    ws?.close();
+  };
 }

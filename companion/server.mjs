@@ -10,17 +10,45 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod/v4";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "dist");
-const port = Number(process.env.SEQUENCE_PORT || 4174);
+const port = Number(process.env.SEQUENCE_PORT || 0);
 const token = randomBytes(24).toString("hex");
 const allowed = [];
-for (let i = 2; i < process.argv.length; i++)
-  if (process.argv[i] === "--allow-media" && process.argv[i + 1])
+let local = false;
+let editorUrl = new URL("https://alamkanak.github.io/sequence/");
+for (let i = 2; i < process.argv.length; i++) {
+  const arg = process.argv[i];
+  if (arg === "--allow-media" && process.argv[i + 1])
     allowed.push(await realpath(process.argv[++i]));
+  else if (arg === "--editor-url" && process.argv[i + 1])
+    editorUrl = new URL(process.argv[++i]);
+  else if (arg === "--local") local = true;
+  else if (arg === "--help") {
+    console.log(
+      "Sequence MCP\n\nConnects your AI client to https://alamkanak.github.io/sequence/.\nCall connect_editor, open its link, and approve the connection in the editor.\n\nOptions:\n  --allow-media <directory>  Allow agent imports from this directory (repeatable)\n  --editor-url <url>         Use another trusted editor deployment\n  --local                    Serve a local dist/ build instead\n\nRequires Node.js 24+. SEQUENCE_PORT optionally fixes the loopback port.",
+    );
+    process.exit(0);
+  } else throw new Error(`Unknown or incomplete option: ${arg}`);
+}
+if (
+  editorUrl.username ||
+  editorUrl.password ||
+  (editorUrl.protocol !== "https:" &&
+    !(
+      editorUrl.protocol === "http:" &&
+      ["localhost", "127.0.0.1"].includes(editorUrl.hostname)
+    ))
+)
+  throw new Error(
+    "The editor URL must use HTTPS or a local development server",
+  );
+if (!Number.isInteger(port) || port < 0 || port > 65535)
+  throw new Error("SEQUENCE_PORT must be an integer from 0 to 65535");
 const matches = (value) =>
   typeof value === "string" &&
-  value.length === token.length &&
+  /^[a-f0-9]{48}$/.test(value) &&
   timingSafeEqual(Buffer.from(value), Buffer.from(token));
-const host = `127.0.0.1:${port}`;
+let host;
+let pairingUrl;
 const mime = {
   ".html": "text/html",
   ".js": "text/javascript",
@@ -36,6 +64,12 @@ const web = createServer(async (req, res) => {
   try {
     if (req.headers.host !== host) {
       res.writeHead(403).end("Invalid Host");
+      return;
+    }
+    if (!local) {
+      res
+        .writeHead(404)
+        .end("Connect through your AI app using connect_editor.");
       return;
     }
     const url = new URL(req.url, `http://${host}`);
@@ -58,7 +92,11 @@ const web = createServer(async (req, res) => {
     });
     res.end(data);
   } catch {
-    res.writeHead(404).end("Build the app with npm run build first.");
+    res
+      .writeHead(404)
+      .end(
+        "Use the GitHub Pages editor. For --local, run npm run build first.",
+      );
   }
 });
 const wss = new WebSocketServer({
@@ -66,10 +104,17 @@ const wss = new WebSocketServer({
   maxPayload: 128 * 1024 * 1024,
 });
 web.on("upgrade", (req, socket, head) => {
-  const url = new URL(req.url, `http://${host}`);
+  let url;
+  try {
+    url = new URL(req.url, `http://${host}`);
+  } catch {
+    socket.write("HTTP/1.1 400 Bad Request\r\n\r\n");
+    socket.destroy();
+    return;
+  }
   if (
     req.headers.host !== host ||
-    req.headers.origin !== `http://${host}` ||
+    req.headers.origin !== editorUrl.origin ||
     url.pathname !== "/bridge" ||
     !matches(url.searchParams.get("token"))
   ) {
@@ -110,7 +155,7 @@ wss.on("connection", (ws) => {
 async function call(tool, args) {
   if (!browser || browser.readyState !== 1)
     throw new Error(
-      "Open the local editor URL printed by the companion and keep it connected.",
+      "Call connect_editor and ask the user to open its pairing URL and approve the connection. Keep the editor tab open.",
     );
   const id = randomUUID();
   return new Promise((resolve, reject) => {
@@ -147,6 +192,11 @@ const operations = z
 function buildServer() {
   const mcp = new McpServer({ name: "sequence-editor", version: "0.1.0" });
   const tools = [
+    [
+      "connect_editor",
+      "Start here: get the pairing link for the GitHub Pages editor and connection status. Show the link to the user and ask them to approve Connect AI agent in their browser. This connects to their current browser-local project; no repository clone or app build is needed.",
+      z.object({}),
+    ],
     [
       "inspect_project",
       "Inspect the connected project, revision, stable IDs and codec/element capabilities.",
@@ -208,6 +258,19 @@ function buildServer() {
   for (const [name, description, inputSchema] of tools)
     mcp.registerTool(name, { description, inputSchema }, async (args) => {
       try {
+        if (name === "connect_editor") {
+          const result = {
+            connected: browser?.readyState === 1,
+            url: pairingUrl,
+            instructions:
+              "Open this link in desktop Chrome or Edge, approve Connect AI agent, and allow local network access if prompted. Keep this editor tab open. Then call inspect_project. Only one tab can connect at a time.",
+          };
+          return {
+            content: [{ type: "text", text: JSON.stringify(result) }],
+            structuredContent: result,
+            resultType: "complete",
+          };
+        }
         if (name === "manage_assets" && args.action === "import") {
           const files = [];
           for (const path of args.paths || []) {
@@ -268,13 +331,25 @@ await new Promise((resolve, reject) => {
   web.once("error", reject);
   web.listen(port, "127.0.0.1", resolve);
 });
-console.error(`Sequence editor: http://${host}/#/editor?token=${token}`);
+host = `127.0.0.1:${web.address().port}`;
+if (local) editorUrl = new URL(`http://${host}/`);
+const parameters = new URLSearchParams({
+  bridge: `ws://${host}/bridge`,
+  token,
+});
+editorUrl.hash = `/editor?${parameters}`;
+pairingUrl = editorUrl.href;
+console.error(`Sequence editor: ${pairingUrl}`);
 console.error(
   `MCP stdio ready. Allowed media directories: ${allowed.length}. The browser must stay open.`,
 );
 serveStdio(buildServer);
-process.on("SIGINT", () => {
+function shutdown() {
+  browser?.terminate();
   wss.close();
   web.close();
   process.exit(0);
-});
+}
+process.once("SIGINT", shutdown);
+process.once("SIGTERM", shutdown);
+process.stdin.once("end", shutdown);

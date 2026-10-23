@@ -36,11 +36,11 @@ Downloaded the actual edited output and inspected it with FFprobe/FFmpeg:
 
 The production app was exercised through its visible UI: disk import; video/music drag placement; first-video settings; split; speed; snapping; cross dissolve; text editing; shape move/resize handles; vector placement/rotation; enter/exit animation; audio fades; render; encoded-file preview and download. Numeric inspector state isolation was checked by switching between an element and footage and confirming footage geometry remained unchanged. Benchmark replacement was undone in a single action.
 
-The current unit suite has 66 passing tests across twelve files, including source-relative timing, ripple editing, paint, text layout, geometry/alignment, clipboard snapshots, atomic undo, and worker shutdown. MCP integration previously passed discovery plus real browser pairing, allowed-file import, placement, editing, idempotency, stale-revision rejection, preview, export, and job completion. Tailwind/Phosphor source constraints and the TypeScript production build pass.
+The current unit suite has 79 passing tests across thirteen files, including source-relative timing, ripple editing, paint, text layout, geometry/alignment, clipboard snapshots, atomic undo, worker shutdown, and safe MCP pairing links. MCP integration previously passed discovery plus real browser pairing, allowed-file import, placement, editing, idempotency, stale-revision rejection, preview, export, and job completion. Tailwind/Phosphor source constraints and the TypeScript production build pass.
 
 October 23 interaction checks covered menu dismissal, readable navigation/track controls, circular presets, proportional/side resizing, resize guides, cross-track placement previews, copy/paste, undo, and navigation lifecycle checks. These checks do not establish a new FPS measurement.
 
-Playwright workflow/theme/stress specifications are included and test discovery passes. The browser runs reported here used the in-app browser, rather than a separate headless Playwright execution.
+Playwright workflow/theme/stress specifications are included and test discovery passes. The earlier editing/performance runs used the in-app browser. An additional isolated headless Chrome test verified HTTPS MCP approval, file import, edits, preview, export, and download availability. A clean-directory test verified URL-based npx installation, pairing authorization, and companion shutdown. These integration checks do not establish a new FPS measurement.
 
 ## Audio waveform and automation verification — October 23
 

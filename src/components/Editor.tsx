@@ -48,6 +48,9 @@ export function Editor() {
   const [dialog, setDialog] = useState<
     "export" | "performance" | "shortcuts" | null
   >(null);
+  const [approveCompanion, setApproveCompanion] = useState<(() => void) | null>(
+    null,
+  );
   const projectInput = useRef<HTMLInputElement>(null);
   const fileDrop = useMemo(() => createFileDropTarget(importFiles), []);
   const [left, setLeft] = usePanelSize("media", 240, 200, 600),
@@ -154,7 +157,9 @@ export function Editor() {
       }
     };
     window.addEventListener("keydown", handler);
-    const disconnect = connectCompanion();
+    const disconnect = connectCompanion((connect) =>
+      setApproveCompanion(() => connect),
+    );
     return () => {
       window.removeEventListener("keydown", handler);
       disconnect?.();
@@ -414,6 +419,38 @@ export function Editor() {
           <PerformanceDialog onClose={() => setDialog(null)} />
         )}
       </Suspense>
+      {approveCompanion && (
+        <Modal
+          title="Connect AI agent"
+          onClose={() => setApproveCompanion(null)}
+        >
+          <div className="space-y-4 text-sm">
+            <p>Allow your AI agent to control “{project.name}”?</p>
+            <p className={skin.muted}>
+              Your agent can inspect and edit this project, request preview
+              images, and start exports. Project data and requested previews are
+              shared with your AI client. Rendering stays in your browser.
+            </p>
+            <p className={skin.muted}>
+              Keep this tab open. Allow local network access if your browser
+              asks.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setApproveCompanion(null)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  approveCompanion();
+                  setApproveCompanion(null);
+                }}
+              >
+                Connect
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
       {dialog === "shortcuts" && (
         <Modal
           title="A little faster, with keys"

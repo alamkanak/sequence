@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && npm run build:mcp",
+    "build:mcp": "node scripts/package-mcp.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "test:e2e": "playwright test",
@@ -14,6 +15,7 @@
     "mcp": "node companion/server.mjs",
     "check": "tsc --noEmit && node scripts/check-ui.mjs",
     "test:mcp": "node scripts/test-mcp.mjs",
+    "test:mcp:package": "node scripts/test-mcp.mjs --package",
     "format": "prettier --write src tests companion scripts *.ts"
   },
   "dependencies": {
