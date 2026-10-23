@@ -19,6 +19,10 @@ export const skin = {
     "border border-zinc-200 bg-zinc-50 text-zinc-900 [[data-theme=dark]_&]:border-white/10 [[data-theme=dark]_&]:bg-[#1a1a20] [[data-theme=dark]_&]:text-zinc-100",
   hover: "hover:bg-zinc-100 [[data-theme=dark]_&]:hover:bg-white/[0.06]",
 };
+export const controlClass = cn(
+  "h-8 rounded-md text-xs outline-none transition-colors hover:border-zinc-300 focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:opacity-40 [[data-theme=dark]_&]:hover:border-white/20 [[data-theme=dark]_&]:focus:border-indigo-400/60",
+  skin.input,
+);
 export function Button({
   children,
   className,
@@ -82,8 +86,10 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className={cn(
-        "min-w-0 rounded-md px-2.5 py-1.5 text-xs outline-none focus:border-indigo-400 disabled:opacity-40",
-        skin.input,
+        controlClass,
+        "w-full min-w-0 px-2.5",
+        props.type === "number" &&
+          "tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none",
         props.className,
       )}
     />
@@ -92,46 +98,27 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
 export function Field({
   label,
   children,
+  htmlFor,
 }: {
   label: string;
   children: ReactNode;
+  htmlFor?: string;
 }) {
+  if (htmlFor) {
+    return (
+      <div className="flex min-w-0 flex-col gap-1.5">
+        <label htmlFor={htmlFor} className={cn("text-xs", skin.muted)}>
+          {label}
+        </label>
+        {children}
+      </div>
+    );
+  }
   return (
     <label className="flex min-w-0 flex-col gap-1.5">
       <span className={cn("text-xs", skin.muted)}>{label}</span>
       {children}
     </label>
-  );
-}
-export function Select({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string | number;
-  onChange: (v: string) => void;
-  options: { value: string | number; label: string }[];
-}) {
-  return (
-    <Field label={label}>
-      <select
-        aria-label={label}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={cn(
-          "w-full rounded-md px-2 py-1.5 text-xs outline-none focus:border-indigo-400",
-          skin.input,
-        )}
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </Field>
   );
 }
 export function Section({

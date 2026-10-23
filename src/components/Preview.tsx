@@ -24,6 +24,7 @@ import { snapAlignment, type AlignmentGuide } from "../engine/alignment";
 import { duration, type Clip } from "../core/model";
 import { meter } from "../core/performance";
 import { cn, skin, IconButton, timecode } from "./ui";
+import { Select } from "./Select";
 export function TransportControls() {
   const { project } = useStore();
   const [playing, setPlaying] = useState(transport.playing);
@@ -566,17 +567,19 @@ export function Preview() {
           Preview
         </span>
         <div className="flex items-center gap-3">
-          <select
-            aria-label="Preview quality"
+          <Select
+            label="Preview quality"
+            hideLabel
             value={quality}
-            onChange={(e) => setQuality(+e.target.value)}
-            className="bg-transparent text-xs outline-none"
-          >
-            <option value={1}>Full quality</option>
-            <option value={0.5}>Half quality</option>
-            <option value={0.25}>Quarter quality</option>
-          </select>
-          <span className={skin.muted}>
+            onChange={(value) => setQuality(+value)}
+            options={[
+              { value: 1, label: "Full quality" },
+              { value: 0.5, label: "Half quality" },
+              { value: 0.25, label: "Quarter quality" },
+            ]}
+            className="w-36"
+          />
+          <span className={cn("whitespace-nowrap", skin.muted)}>
             {project.width} × {project.height}
           </span>
           <IconButton

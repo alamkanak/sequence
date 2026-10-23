@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { NumberField } from "./NumberField";
+import { ColorField } from "./ColorField";
+import { Select } from "./Select";
 import { VolumeControls } from "./VolumeControls";
 import { PaintControls } from "./PaintControls";
 import {
@@ -12,16 +14,7 @@ import { store, useStore } from "../core/store";
 import { transport } from "../engine/transport";
 import { duplicateClip } from "../core/actions";
 import { type Clip, type Motion } from "../core/model";
-import {
-  Button,
-  Field,
-  Input,
-  Select,
-  Section,
-  skin,
-  cn,
-  IconButton,
-} from "./ui";
+import { Button, Field, Input, Section, skin, cn, IconButton } from "./ui";
 const motions = [
   { value: "none", label: "None" },
   { value: "fade", label: "Fade" },
@@ -117,15 +110,12 @@ export function Properties({ widthClass = "w-60" }: { widthClass?: string }) {
                 step={1}
                 onChange={(fps) => projectPatch({ fps })}
               />
-              <Field label="Canvas color">
-                <Input
-                  aria-label="Canvas color"
-                  type="color"
-                  value={p.background}
-                  className="h-8 w-full p-1"
-                  onChange={(e) => projectPatch({ background: e.target.value })}
-                />
-              </Field>
+              <ColorField
+                label="Canvas color"
+                ariaLabel="Canvas color"
+                value={p.background}
+                onChange={(background) => projectPatch({ background })}
+              />
             </Section>
             <div className={cn("p-4 text-xs leading-relaxed", skin.muted)}>
               Select a segment to adjust its timing, appearance, and animation.

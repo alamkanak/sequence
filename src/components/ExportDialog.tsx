@@ -9,7 +9,8 @@ import { useStore } from "../core/store";
 import { exports, useExport } from "../engine/export";
 import { transport } from "../engine/transport";
 import { duration } from "../core/model";
-import { Modal, Field, Input, Select, Button, cn, skin } from "./ui";
+import { Modal, Field, Input, Button, cn, skin } from "./ui";
+import { Select } from "./Select";
 export function ExportDialog({ onClose }: { onClose: () => void }) {
   const { project: p } = useStore(),
     job = useExport();
@@ -86,6 +87,7 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
           <div className="grid grid-cols-2 gap-3">
             <Select
               label="Format"
+              disabled={active}
               value={format}
               onChange={(v) => setFormat(v as "mp4" | "webm")}
               options={[
@@ -95,6 +97,7 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
             />
             <Select
               label="Resolution"
+              disabled={active}
               value={`${width}x${height}`}
               onChange={(v) => {
                 const [w, h] = v.split("x").map(Number);
@@ -128,6 +131,7 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
             </Field>
             <Select
               label="Quality"
+              disabled={active}
               value={bitrate}
               onChange={(v) => setBitrate(+v)}
               options={[

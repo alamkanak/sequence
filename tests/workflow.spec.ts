@@ -44,8 +44,12 @@ test("local import → tracks → split/speed → elements → export/download",
   await page
     .getByLabel("Text content", { exact: true })
     .fill("A story made locally");
-  await page.getByLabel("Enter", { exact: true }).selectOption("fade");
-  await page.getByLabel("Exit", { exact: true }).selectOption("slide");
+  await page.getByRole("combobox", { name: "Enter", exact: true }).click();
+  await page.getByRole("option", { name: "Fade", exact: true }).click();
+  await page.getByRole("combobox", { name: "Exit", exact: true }).click();
+  await page
+    .getByRole("option", { name: "Slide horizontally", exact: true })
+    .click();
   await page.getByRole("button", { name: "Rectangle", exact: true }).click();
   await page.getByLabel("Opacity (%)", { exact: true }).fill("35");
   await page.getByLabel("Opacity (%)", { exact: true }).press("Tab");

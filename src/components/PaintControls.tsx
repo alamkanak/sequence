@@ -1,6 +1,7 @@
 import type { Gradient, GradientStop } from "../core/model";
 import { defaultGradient, addGradientStop } from "../engine/paint";
-import { Select, Button, IconButton, cn, skin } from "./ui";
+import { Button, IconButton, cn, skin } from "./ui";
+import { Select } from "./Select";
 import { ColorField } from "./ColorField";
 import { NumberField } from "./NumberField";
 import { PlusIcon, TrashIcon } from "./icons";
@@ -38,7 +39,9 @@ export function PaintControls({
       },
     });
   return (
-    <div className={cn("space-y-3 rounded-lg border p-3", skin.border)}>
+    <div
+      className={cn("@container space-y-3 rounded-lg border p-3", skin.border)}
+    >
       <p className="text-xs font-medium">{label}</p>
       <Select
         label={`${label} style`}
@@ -60,7 +63,7 @@ export function PaintControls({
           })
         }
       />
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 @[180px]:grid-cols-2">
         {!gradient && (
           <ColorField
             label="Color"
@@ -92,7 +95,7 @@ export function PaintControls({
           {gradient.stops.map((stop, index) => (
             <div
               key={index}
-              className="grid grid-cols-2 items-end gap-2 border-t pt-3 border-zinc-200 [[data-theme=dark]_&]:border-white/10"
+              className="grid grid-cols-1 items-end gap-2 border-t pt-3 border-zinc-200 @[180px]:grid-cols-2 [[data-theme=dark]_&]:border-white/10"
             >
               <ColorField
                 label={`Stop ${index + 1}`}

@@ -7,6 +7,8 @@ export { ArrowUpRightIcon } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 export { ArrowsDownUpIcon } from "@phosphor-icons/react/dist/csr/ArrowsDownUp";
 export { AtomIcon } from "@phosphor-icons/react/dist/csr/Atom";
 export { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
+export { CaretUpIcon } from "@phosphor-icons/react/dist/csr/CaretUp";
+export { CheckIcon } from "@phosphor-icons/react/dist/csr/Check";
 export { ChartLineIcon } from "@phosphor-icons/react/dist/csr/ChartLine";
 export { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
 export { CircleIcon } from "@phosphor-icons/react/dist/csr/Circle";

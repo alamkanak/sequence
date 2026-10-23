@@ -27,11 +27,12 @@ export function NumberField({
     if (!edited.current) return;
     edited.current = false;
     let n = Number(draft);
-    if (!Number.isFinite(n) || draft === "") {
+    if (!Number.isFinite(n) || draft.trim() === "") {
       setDraft(String(value));
       return;
     }
     n = Math.max(min ?? -Infinity, Math.min(max ?? Infinity, n));
+    setDraft(String(Math.round(n * 1000) / 1000));
     if (n !== value) onChange(n);
   };
   return (
@@ -50,6 +51,12 @@ export function NumberField({
         onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === "Enter") e.currentTarget.blur();
+          if (e.key === "Escape") {
+            edited.current = false;
+            setDraft(String(Math.round(value * 1000) / 1000));
+            e.currentTarget.blur();
+            e.preventDefault();
+          }
         }}
       />
     </Field>
