@@ -9,19 +9,19 @@
 
 ## Editing workflow
 
-| Area | Required behavior |
-| --- | --- |
-| Media | Import local video, audio, and images; show metadata, thumbnails, waveforms, and unsupported-format errors. Drag assets into tracks. |
-| Project | First timeline video sets dimensions, aspect ratio, and rational FPS, accounting for rotation. Allow manual overrides; later imports do not reset settings. |
-| Timeline | Multiple reorderable tracks; visually higher video tracks composite above lower tracks. Audio tracks mix independently. Support zoom, pan, selection, track lock/hide/mute, and linked audio/video. |
-| Sticky editing | Snapping to playhead, clip edges, and markers, with temporary bypass. Separate ripple mode closes gaps/shifts downstream clips on affected unlocked tracks. |
-| Segments | Move, trim, split at playhead, delete, duplicate, change speed, adjust volume, and undo/redo. Preserve linked audio/video synchronization. |
-| Elements | Add editable text and shapes; configure fonts, fill, stroke, opacity, position, scale, rotation, and transform origin. |
-| Preview editing | Select elements directly; drag, resize, rotate, and move anchor/pivot handles. Preview handles and numeric properties edit the same underlying values. |
-| Motion | Adjustable transitions between adjacent footage, plus enter/exit animation presets and transform/opacity keyframes for footage, text, and shapes. Define overlap duration and reject transitions without sufficient source handles. |
-| Music | Drag audio from Media onto a track; trim, move, split, set gain, and add fades. |
-| Export | Configure filename, container/codec, dimensions, FPS, bitrate/quality, audio, and supported color mode. Validate the exact configuration before starting; show progress, cancel, and useful errors. |
-| Export result | Render locally, then preview the actual encoded output with sound and a download button. Repeated exports preserve the editable project. |
+| Area            | Required behavior                                                                                                                                                                                                                   |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Media           | Import local video, audio, and images; show metadata, thumbnails, full-source timestamped audio waveforms that follow trims/speed, and unsupported-format errors. Drag assets into tracks. Media removal belongs in a keyboard-accessible right-click context menu, with confirmation for timeline uses and undo support.                                                                                                |
+| Project         | First timeline video sets dimensions, aspect ratio, and rational FPS, accounting for rotation. Allow manual overrides; later imports do not reset settings.                                                                         |
+| Timeline        | Multiple reorderable tracks; visually higher video tracks composite above lower tracks. Audio tracks mix independently. Show placement previews when moving between tracks. Support zoom, pan, selection, track lock/hide/mute, and linked audio/video.                                 |
+| Sticky editing  | Snapping to playhead, clip edges, and markers, with temporary bypass. Separate ripple mode closes gaps/shifts downstream clips on affected unlocked tracks.                                                                         |
+| Segments        | Move, trim, split at playhead, delete, duplicate, copy/paste at the playhead with Cmd/Ctrl+C/V, change speed, adjust volume, add draggable volume points or duck a selected range with ramps, and undo/redo. Preserve linked audio/video synchronization.                                                                                          |
+| Elements        | Add editable text and shapes; configure fonts, fill/stroke colors, independent fill/stroke opacity, solid/linear/radial paints with editable gradient stops, overall opacity, position, scale, rotation, and transform origin.                                                                                                              |
+| Preview editing | Select elements directly; drag, resize, rotate, and move anchor/pivot handles. Option/Alt-resize expands both sides around the visual center, including rotated elements; Corners preserve proportions by default; side handles change one dimension; Shift frees corner aspect ratio. New circles use 1:1 pixel dimensions. Preview handles and numeric properties edit the same underlying values. Snap visual centers/edges when moving and active handles when resizing to the canvas with visible guides; Alt bypasses move snapping; Cmd/Ctrl bypasses resize snapping. Text boxes wrap without compressing glyphs.                                                                              |
+| Motion          | Adjustable transitions between adjacent footage, plus enter/exit animation presets and transform/opacity keyframes for footage, text, and shapes. Define overlap duration and reject transitions without sufficient source handles. |
+| Music           | Drag audio from Media onto a track; trim, move, split, set gain, and add fades.                                                                                                                                                     |
+| Export          | Configure filename, container/codec, dimensions, FPS, bitrate/quality, audio, and supported color mode. Validate the exact configuration before starting; show progress, cancel, and useful errors.                                 |
+| Export result   | Render locally, then preview the actual encoded output with sound and a download button. Repeated exports preserve the editable project.                                                                                            |
 
 ## Extensibility and persistence
 
@@ -44,8 +44,9 @@
 - Style the entire interface with Tailwind CSS utility classes only: no handwritten CSS rules, CSS modules, CSS-in-JS, or inline style overrides.
 - Use Phosphor React icons exclusively; no other icon library or custom SVG interface assets. Imported vector media remains supported as project content.
 - Support light and dark themes throughout. Default to **System**, follow live OS appearance changes, and offer **System / Light / Dark** settings. Persist explicit choices locally across reloads; returning to System restores OS tracking. Apply the resolved theme before first paint.
+- Interface typography must be at least **12px**, including captions, labels, dialogs, landing-page previews, and canvas timeline text. Top-bar action icons use **18px** glyphs and **40px** buttons; appearance controls use 18px glyphs and 36px buttons. Landing navigation and project-menu labels use 14px; track controls use 16px icons with 24px targets. Project menus close after actions, on outside click, or Escape.
 - Landing page: clear editing proposition, primary “Open editor” action, product preview, feature overview, local-processing explanation, and compatibility details.
-- Editor: Media/Elements left, interactive preview center, Properties right, multitrack timeline below; resizable panels and keyboard shortcuts.
+- Editor: Media/Elements left, interactive preview center, Properties right, multitrack timeline below; resizable side panels, Preview/Timeline split, and track labels, with persisted sizes, keyboard resizing, and reset controls. Preview toolbar spans its panel; a neutral surround and frame outline distinguish the output canvas.
 - Follow the visual language observed on [Linear](https://linear.app/) on **2026-10-22**: restrained color/rounding, fine borders, large left-aligned landing type, and compact editor controls. Dark mode uses near-black surfaces/off-white text; light mode uses light surfaces/dark text with equivalent hierarchy. Maintain readable contrast, clear selection/focus, and reduced-motion support in both.
 - Inspected screenshots: [homepage](docs/references/linear-home-2026-10-22.jpg), [feature panels](docs/references/linear-features-2026-10-22.jpg). Use original branding/assets.
 

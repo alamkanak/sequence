@@ -1,2 +1,38 @@
+# Dependencies and build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Generated test and verification artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+coverage/
+/docs/verification/
+
+# Local caches and scratch files
+.cache/
+.vite/
+.vite-temp/
+/tmp/
+/temp/
+/.tmp/
+*.log
+*.log.*
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# Local configuration and secrets
+/.codex/
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# OS metadata
 .DS_Store
-.codex
+Thumbs.db
