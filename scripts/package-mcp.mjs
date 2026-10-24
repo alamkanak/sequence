@@ -33,7 +33,7 @@ try {
     },
     homepage: "https://alamkanak.github.io/sequence/",
     bin: { "sequence-mcp": "server.mjs" },
-    files: ["server.mjs", "contracts.mjs", "LICENSE", "README.md"],
+    files: ["server.mjs", "contracts.mjs", "media.mjs", "LICENSE", "README.md"],
     engines: app.engines,
     dependencies: Object.fromEntries(
       ["@modelcontextprotocol/server", "ws", "zod"].map((name) => [
@@ -69,10 +69,14 @@ try {
       },
     ).outputText,
   );
+  await copyFile(
+    resolve(root, "companion/media.mjs"),
+    resolve(staging, "media.mjs"),
+  );
   await copyFile(resolve(root, "LICENSE"), resolve(staging, "LICENSE"));
   await writeFile(
     resolve(staging, "README.md"),
-    "# Sequence MCP\n\nA local bridge for https://alamkanak.github.io/sequence/.\nRequires Node.js 24+. No repository clone or app build is needed.\n\nConfigure your MCP client to launch this package with npx. Ask your agent to call connect_editor, open its link, and approve the connection in the editor. Media stays in browser storage; requested previews and project data are shared with the connected AI client.\n\nUse --allow-media /absolute/path/to/media to permit agent file imports.\n\nSource and setup: https://github.com/alamkanak/sequence\nLicense: AGPL-3.0-only.\n",
+    "# Sequence MCP\n\nA local bridge for https://alamkanak.github.io/sequence/.\nRequires Node.js 24+. No repository clone or app build is needed.\n\nConfigure your MCP client to launch this package with npx. Ask your agent to call connect_editor, open its link, and approve the connection in the editor. Media stays in browser storage; requested previews and project data are shared with the connected AI client.\n\nUse --allow-media /absolute/path/to/media for selected directories, or --allow-media-anywhere for any readable directory. Binary imports have no fixed file-size limit.\n\nSource and setup: https://github.com/alamkanak/sequence\nLicense: AGPL-3.0-only.\n",
   );
   const packed = JSON.parse(
     execFileSync(

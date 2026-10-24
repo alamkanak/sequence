@@ -9,12 +9,14 @@ import { exports } from "../engine/export";
 import { addAsset, importFiles } from "./actions";
 import { canEncodeVideo, canEncodeAudio } from "mediabunny";
 import { elementManifest } from "../engine/elements";
-import {
-  parseCompanionLink,
-  withoutCompanionCredentials,
-} from "./companion-link";
+import { receiveMedia } from "./mcp-media";
+import type { MediaTransferContext } from "./mcp-connection";
 const receipts = new Map<string, ToolOutput<"apply_edits">>();
-export async function handleTool(toolName: unknown, input: unknown) {
+export async function handleTool(
+  toolName: unknown,
+  input: unknown,
+  transfer?: MediaTransferContext,
+) {
   const { name, args } = parseBrowserRequest(toolName, input);
   const p = store.get().project;
   if (name === "inspect_project") {
@@ -91,12 +93,16 @@ export async function handleTool(toolName: unknown, input: unknown) {
     if (args.action === "import") {
       const imported: File[] = [];
       for (const item of args.files) {
-        if (item.data.length > 96 * 1024 * 1024)
-          throw new Error("Import large media through the browser file picker");
-        const bytes = Uint8Array.from(atob(item.data), (c) => c.charCodeAt(0));
-        imported.push(new File([bytes], item.name, { type: item.type }));
+        if (!transfer)
+          throw new Error("An approved MCP connection is required for imports");
+        imported.push(await receiveMedia(item, transfer));
       }
-      await importFiles(imported);
+      transfer?.signal.throwIfAborted();
+      const result = await importFiles(imported, transfer?.signal);
+      if (result.failed)
+        throw new Error(
+          store.get().error || "Some files could not be imported",
+        );
       return store.get().project.assets;
     }
     throw new Error("Use list, place, or import");
@@ -148,87 +154,4 @@ export async function handleTool(toolName: unknown, input: unknown) {
     return { ...result, bytes: blob?.size, downloadAvailable: !!url };
   }
   throw new Error(`Unknown tool: ${name}`);
-}
-export function connectCompanion(
-  requestApproval: (connect: () => void) => void,
-) {
-  let ws: WebSocket | undefined;
-  let disposed = false;
-  const offerConnection = () => {
-    try {
-      const pairing = parseCompanionLink(location.href);
-      if (!pairing) return;
-      history.replaceState(
-        history.state,
-        "",
-        withoutCompanionCredentials(location.href),
-      );
-      requestApproval(() => {
-        const open = () => {
-          if (disposed) return;
-          try {
-            const socket = new WebSocket(
-              `${pairing.endpoint}?token=${pairing.token}`,
-            );
-            ws = socket;
-            socket.onmessage = async (e) => {
-              let id: string | undefined;
-              try {
-                const m = JSON.parse(e.data);
-                id = m.id;
-                const result = await handleTool(m.tool, m.args);
-                if (socket.readyState === WebSocket.OPEN)
-                  socket.send(JSON.stringify({ id, result }));
-              } catch (error) {
-                if (id && socket.readyState === WebSocket.OPEN)
-                  socket.send(
-                    JSON.stringify({
-                      id,
-                      error:
-                        error instanceof Error ? error.message : String(error),
-                    }),
-                  );
-              }
-            };
-            socket.onopen = () => {
-              if (ws === socket)
-                store.patch({
-                  error:
-                    "AI agent connected to this project. Close this tab to disconnect.",
-                });
-            };
-            socket.onclose = () => {
-              if (ws === socket && !disposed)
-                store.patch({
-                  error:
-                    "MCP disconnected. Ask your agent for a new connection link; allow local network access if prompted and connect only one tab.",
-                });
-            };
-          } catch {
-            store.patch({
-              error:
-                "Could not connect to the local MCP companion. Use desktop Chrome or Edge and allow local network access for this site.",
-            });
-          }
-        };
-        if (ws && ws.readyState !== WebSocket.CLOSED) {
-          const old = ws;
-          ws = undefined;
-          old.addEventListener("close", open, { once: true });
-          old.close();
-        } else open();
-      });
-    } catch (error) {
-      store.patch({
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  };
-  window.addEventListener("hashchange", offerConnection);
-  offerConnection();
-  return () => {
-    disposed = true;
-    window.removeEventListener("hashchange", offerConnection);
-    ws?.close();
-  };
 }

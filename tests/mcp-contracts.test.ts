@@ -140,7 +140,14 @@ describe("MCP contracts", () => {
     expect(
       parseBrowserRequest("manage_assets", {
         action: "import",
-        files: [{ name: "clip.mp4", type: "video/mp4", data: "" }],
+        files: [
+          {
+            id: "65814259-e556-4665-93d7-fd61c6b9d0ca",
+            name: "clip.mp4",
+            type: "video/mp4",
+            size: 100 * 1024 * 1024,
+          },
+        ],
       }).args.action,
     ).toBe("import");
     expect(() =>

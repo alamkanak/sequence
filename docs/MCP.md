@@ -12,7 +12,7 @@ For an app with a server form, choose **local / stdio**, command `npx`, and argu
 
 ```text
 --yes
-https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.1.0.tgz
+https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.2.0.tgz
 ```
 
 Each line is a separate argument. The AI app starts the process; do not also
@@ -27,7 +27,7 @@ VS Code uses a different JSON wrapper:
     "sequence": {
       "type": "stdio",
       "command": "npx",
-      "args": ["--yes", "https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.1.0.tgz"]
+      "args": ["--yes", "https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.2.0.tgz"]
     }
   }
 }
@@ -53,9 +53,15 @@ exports from the editor. Browser-only/cloud-only agents without a local connecto
 cannot use this stdio server.
 
 To let the agent import files, append `"--allow-media", "/absolute/path/to/media"`
-to `args`. Repeat for additional directories. Only those directories are readable
-through the import tool; files over 64 MiB use the browser file picker. Media
+to `args`. Repeat for additional directories, or add `"--allow-media-anywhere"`
+to permit imports from any directory the companion can read. Imports transfer
+binary data directly to the approved editor with no fixed file-size limit. Media
 already imported in the connected editor needs no directory permission.
+
+The editor toolbar's **MCP** button shows live connection status. Open it for the
+client and companion versions, heartbeat, media access, and request activity, or
+to disconnect. Connection messages and other transient notices appear as
+dismissible toasts. After disconnecting, request a fresh pairing link to reconnect.
 
 If pairing fails, check that the AI app has started the server, local-network
 access is allowed for the site, and no other tab is connected. Remote SSH,

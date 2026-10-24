@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { emptyProject, newClip, type Asset } from "../src/core/model";
 import { store } from "../src/core/store";
+import { notifications } from "../src/core/notifications";
 import { assetFiles, inspectMedia } from "../src/engine/client";
 import { put } from "../src/core/storage";
 import { transport } from "../src/engine/transport";
@@ -160,7 +161,15 @@ describe("missing media recovery", () => {
       relinkAsset(original.id, file("renamed.mp4")),
     ).resolves.toBeUndefined();
     expect(assetFiles.has(original.id)).toBe(true);
-    expect(store.get().error).toContain("available for this session");
+    expect(
+      notifications
+        .get()
+        .some(
+          (item) =>
+            item.tone === "warning" &&
+            item.message.includes("available for this session"),
+        ),
+    ).toBe(true);
     expect(store.get().project.assets[0].id).toBe(original.id);
   });
 });

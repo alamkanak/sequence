@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { Landing } from "./components/Landing";
 import { restoreProject } from "./core/actions";
 import { cn, skin } from "./components/ui";
+import { ToastHost } from "./components/Toast";
 const Editor = lazy(() =>
   import("./components/Editor").then((m) => ({ default: m.Editor })),
 );
@@ -21,6 +22,7 @@ export function App() {
         skin.app,
       )}
     >
+      <ToastHost />
       {route.startsWith("#/editor") ? (
         <Suspense
           fallback={

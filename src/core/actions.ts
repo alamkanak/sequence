@@ -10,6 +10,7 @@ import {
   type Project,
 } from "./model";
 import { store } from "./store";
+import { notifications } from "./notifications";
 import { assetFiles, inspectMedia } from "../engine/client";
 import { get, put, saveProject } from "./storage";
 import { transport } from "../engine/transport";
@@ -54,15 +55,16 @@ async function attachFile(asset: Asset, file: File, existing = false) {
   try {
     await put("files", asset.id, file);
   } catch {
-    store.patch({
-      error: `${file.name} is available for this session, but could not be saved in browser storage. Keep the original file to relink next time.`,
-    });
+    notifications.show(
+      `${file.name} is available for this session, but could not be saved in browser storage. Keep the original file to relink next time.`,
+      { tone: "warning" },
+    );
   }
   if (asset.hdr)
-    store.patch({
-      error:
-        "HDR source detected. Preview is SDR; export requires explicit SDR tone-mapping consent.",
-    });
+    notifications.show(
+      "HDR source detected. Preview is SDR; export requires explicit SDR tone-mapping consent.",
+      { tone: "warning" },
+    );
 }
 
 /** Explicit selection can restore renamed/moved media while keeping every clip. */
@@ -120,9 +122,10 @@ export async function relinkFiles(files: File[]) {
   };
 }
 
-export async function importFiles(files: File[]) {
+export async function importFiles(files: File[], signal?: AbortSignal) {
   let failed = 0;
   for (const file of files) {
+    signal?.throwIfAborted();
     try {
       const projectId = store.get().project.id;
       const existing = store
@@ -137,11 +140,13 @@ export async function importFiles(files: File[]) {
         await relinkFiles([file]);
       } else {
         const asset = await inspectMedia(file);
+        signal?.throwIfAborted();
         if (store.get().project.id !== projectId)
           throw new Error("The project changed. Import the file again.");
         await attachFile(asset, file);
       }
     } catch (e) {
+      signal?.throwIfAborted();
       failed++;
       store.patch({
         error: `${file.name}: ${e instanceof Error ? e.message : e}`,

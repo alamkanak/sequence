@@ -18,7 +18,6 @@ import {
   FolderOpenIcon,
   PlusIcon,
   HouseIcon,
-  XIcon,
   KeyboardIcon,
   SlidersHorizontalIcon,
   MagnifyingGlassIcon,
@@ -43,7 +42,9 @@ import {
   type EditorDialog,
 } from "./editor-commands";
 import { createFileDropTarget } from "../core/file-drop";
-import { connectCompanion } from "../core/automation";
+import { handleTool } from "../core/automation";
+import { connectCompanion } from "../core/mcp-connection";
+import { McpConnection } from "./McpConnection";
 import { useExport } from "../engine/export";
 import { Dropdown } from "./Dropdown";
 import { MediaPanel } from "./MediaPanel";
@@ -60,7 +61,7 @@ const PerformanceDialog = lazy(() =>
   import("./PerformanceDialog").then((m) => ({ default: m.PerformanceDialog })),
 );
 export function Editor() {
-  const { project, error } = useStore(),
+  const { project } = useStore(),
     job = useExport();
   const [dialog, setDialog] = useState<EditorDialog>(null);
   const [commandsOpen, setCommandsOpen] = useState(false);
@@ -104,9 +105,10 @@ export function Editor() {
   useEffect(() => {
     if (dialog !== "import") setImportError("");
   }, [dialog]);
-  const [approveCompanion, setApproveCompanion] = useState<(() => void) | null>(
-    null,
-  );
+  const [approveCompanion, setApproveCompanion] = useState<{
+    connect: () => void;
+    cancel: () => void;
+  } | null>(null);
   const projectInput = useRef<HTMLInputElement>(null);
   const fileDrop = useMemo(
     () => createFileDropTarget(importMedia),
@@ -128,10 +130,7 @@ export function Editor() {
   });
   const leftMax = Math.max(200, Math.min(600, viewport.width - right - 322));
   const rightMax = Math.max(200, Math.min(600, viewport.width - left - 322));
-  const timelineMax = Math.max(
-    160,
-    Math.min(800, viewport.height - 56 - (error ? 48 : 0) - 241),
-  );
+  const timelineMax = Math.max(160, Math.min(800, viewport.height - 56 - 241));
   useEffect(() => {
     const observer = new ResizeObserver(() => {
       const next = {
@@ -212,8 +211,9 @@ export function Editor() {
       }
     };
     window.addEventListener("keydown", handler);
-    const disconnect = connectCompanion((connect) =>
-      setApproveCompanion(() => connect),
+    const disconnect = connectCompanion(
+      (connect, cancel) => setApproveCompanion({ connect, cancel }),
+      handleTool,
     );
     return () => {
       window.removeEventListener("keydown", handler);
@@ -414,6 +414,7 @@ export function Editor() {
           >
             <ChartLineIcon size={18} />
           </IconButton>
+          <McpConnection />
           <ThemePicker compact />
           <Button
             variant="primary"
@@ -463,21 +464,6 @@ export function Editor() {
           e.target.value = "";
         }}
       />
-      {error && (
-        <div
-          role="alert"
-          className="flex shrink-0 items-center justify-between gap-4 border-b border-amber-500/15 bg-amber-500/5 px-4 py-2 text-xs text-amber-600 [[data-theme=dark]_&]:text-amber-300"
-        >
-          <span>{error}</span>
-          <IconButton
-            label="Dismiss notification"
-            size="xs"
-            onClick={() => store.patch({ error: "" })}
-          >
-            <XIcon size={16} />
-          </IconButton>
-        </div>
-      )}
       <main ref={mainRef} className="flex min-h-60 flex-1">
         <MediaPanel
           widthClass={panelSizeClass(left)}
@@ -539,7 +525,10 @@ export function Editor() {
       {approveCompanion && (
         <Modal
           title="Connect AI agent"
-          onClose={() => setApproveCompanion(null)}
+          onClose={() => {
+            approveCompanion.cancel();
+            setApproveCompanion(null);
+          }}
         >
           <div className="space-y-4 text-sm">
             <p>Allow your AI agent to control “{project.name}”?</p>
@@ -553,12 +542,18 @@ export function Editor() {
               asks.
             </p>
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setApproveCompanion(null)}>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  approveCompanion.cancel();
+                  setApproveCompanion(null);
+                }}
+              >
                 Cancel
               </Button>
               <Button
                 onClick={() => {
-                  approveCompanion();
+                  approveCompanion.connect();
                   setApproveCompanion(null);
                 }}
               >

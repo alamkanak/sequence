@@ -1,6 +1,13 @@
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import {
+  mkdtemp,
+  readFile,
+  rm,
+  mkdir,
+  writeFile,
+  truncate,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import assert from "node:assert/strict";
@@ -28,6 +35,13 @@ if (packageSource && !/^https?:\/\//.test(packageSource)) {
   packageSource = `http://127.0.0.1:${packageServer.address().port}/sequence-mcp-${version}.tgz`;
 }
 const temporary = await mkdtemp(resolve(tmpdir(), "sequence-mcp-test-"));
+const anywhere = process.argv.includes("--anywhere");
+const mediaDir = resolve(temporary, "media");
+await mkdir(mediaDir);
+const largeFile = resolve(anywhere ? temporary : mediaDir, "large.jpg");
+await writeFile(largeFile, await readFile("public/demo/dusk.jpg"));
+const largeSize = 65 * 1024 * 1024;
+await truncate(largeFile, largeSize);
 const args = packageSource
   ? [
       resolve(dirname(process.env.npm_execpath), "npx-cli.js"),
@@ -35,6 +49,9 @@ const args = packageSource
       packageSource,
     ]
   : [resolve("companion/server.mjs")];
+args.push(
+  ...(anywhere ? ["--allow-media-anywhere"] : ["--allow-media", mediaDir]),
+);
 const child = spawn(process.execPath, args, {
   cwd: temporary,
   detached: process.platform !== "win32",
@@ -198,19 +215,62 @@ try {
     await rejected(connectUrl, page.origin, { Host: "attacker.example" }),
     403,
   );
-  const outside = await tool("manage_assets", {
-    action: "import",
-    paths: [resolve("README.md")],
-  });
-  assert.equal(outside.isError, true);
+  const outside =
+    !anywhere &&
+    (await tool("manage_assets", {
+      action: "import",
+      paths: [resolve("README.md")],
+    }));
+  if (!anywhere) assert.equal(outside.isError, true);
 
   browser = new WebSocket(connectUrl, { origin: page.origin });
   await new Promise((resolve, reject) => {
     browser.once("open", resolve);
     browser.once("error", reject);
   });
-  browser.on("message", (raw) => {
+  let lastTransfer;
+  const mediaHeaders = {
+    Origin: page.origin,
+    Authorization: `Bearer ${params.get("token")}`,
+  };
+  browser.on("message", async (raw) => {
     const request = JSON.parse(String(raw));
+    if (!request.id) return;
+    if (request.tool === "manage_assets" && request.args.action === "import") {
+      try {
+        const file = request.args.files[0];
+        assert.equal(file.size, largeSize);
+        assert.equal(
+          file.data,
+          undefined,
+          "File bytes must not travel in JSON",
+        );
+        lastTransfer = new URL(`/media/${file.id}`, `http://${bridge.host}`);
+        assert.equal(
+          (await fetch(lastTransfer, { headers: { Origin: page.origin } }))
+            .status,
+          403,
+        );
+        assert.equal(
+          (
+            await fetch(lastTransfer, {
+              headers: { ...mediaHeaders, Origin: "https://attacker.example" },
+            })
+          ).status,
+          403,
+        );
+        const response = await fetch(lastTransfer, { headers: mediaHeaders });
+        assert.equal(response.status, 200);
+        assert.equal(response.headers.get("content-length"), String(largeSize));
+        let bytes = 0;
+        for await (const chunk of response.body) bytes += chunk.length;
+        assert.equal(bytes, largeSize);
+        browser.send(JSON.stringify({ id: request.id, result: { items: [] } }));
+      } catch (error) {
+        browser.send(JSON.stringify({ id: request.id, error: error.message }));
+      }
+      return;
+    }
     browser.send(
       JSON.stringify({
         id: request.id,
@@ -228,6 +288,16 @@ try {
     assetId: "asset-1",
   });
   assert.equal(forwarded.structuredContent.revision, 3);
+  const imported = await tool("manage_assets", {
+    action: "import",
+    paths: [largeFile],
+  });
+  assert.notEqual(imported.isError, true, JSON.stringify(imported));
+  assert.equal(
+    (await fetch(lastTransfer, { headers: mediaHeaders })).status,
+    404,
+    "Transfer must expire after the tool call",
+  );
   await new Promise((resolve) => {
     browser.once("close", resolve);
     browser.close();
@@ -254,7 +324,7 @@ try {
   });
   assert.equal(exitCode, 0);
   console.log(
-    `MCP: ${packageSource ? "installed package, " : ""}stdio, seven tools, hosted pairing, origin/token/Host protection, single-tab control, request forwarding, disconnect, and process shutdown passed.`,
+    `MCP: ${packageSource ? "installed package, " : ""}${anywhere ? "any-directory" : "directory-scoped"} imports over 64 MiB, binary transfer authorization and expiry, schema parity, pairing, forwarding, disconnect, and process shutdown passed.`,
   );
 } finally {
   clearTimeout(timer);

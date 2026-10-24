@@ -1,6 +1,6 @@
 {
   "name": "sequence-video-editor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",
@@ -14,8 +14,8 @@
     "benchmark": "playwright test tests/benchmark.spec.ts --project=chromium",
     "mcp": "node companion/server.mjs",
     "check": "tsc --noEmit && node scripts/check-ui.mjs",
-    "test:mcp": "node scripts/test-mcp.mjs",
-    "test:mcp:package": "node scripts/test-mcp.mjs --package",
+    "test:mcp": "node scripts/test-mcp.mjs && node scripts/test-mcp.mjs --anywhere",
+    "test:mcp:package": "node scripts/test-mcp.mjs --package && node scripts/test-mcp.mjs --package --anywhere",
     "format": "prettier --write src tests companion scripts *.ts"
   },
   "dependencies": {

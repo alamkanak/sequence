@@ -2,13 +2,20 @@ import { test, expect } from "@playwright/test";
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 import { extname, resolve } from "node:path";
+import { mkdtemp, readFile, writeFile, truncate, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 
 test.use({ channel: process.env.PLAYWRIGHT_CHROMIUM_CHANNEL });
 
-test("HTTPS editor pairs only after approval and supports MCP edits, preview, and export", async ({
+test("HTTPS editor supports live MCP status, unrestricted large imports, edits, preview, and export", async ({
   page,
   context,
-}) => {
+}, testInfo) => {
+  const temporary = await mkdtemp(resolve(tmpdir(), "sequence-large-import-"));
+  const largeFile = resolve(temporary, "large.jpg");
+  const largeSize = 65 * 1024 * 1024;
+  await writeFile(largeFile, await readFile("public/demo/dusk.jpg"));
+  await truncate(largeFile, largeSize);
   const origin = "https://sequence.test";
   await context.route(`${origin}/**`, async (route) => {
     const relative = new URL(route.request().url()).pathname.replace(
@@ -34,8 +41,7 @@ test("HTTPS editor pairs only after approval and supports MCP edits, preview, an
       "companion/server.mjs",
       "--editor-url",
       `${origin}/sequence/`,
-      "--allow-media",
-      resolve("public/demo"),
+      "--allow-media-anywhere",
     ],
     {
       env: { ...process.env, SEQUENCE_PORT: "0" },
@@ -80,11 +86,23 @@ test("HTTPS editor pairs only after approval and supports MCP edits, preview, an
     await expect(
       page.getByRole("dialog", { name: "Connect AI agent" }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("button", {
+        name: "MCP connection: Awaiting approval",
+        exact: true,
+      }),
+    ).toBeVisible();
     expect(page.url()).not.toContain("token=");
     expect((await tool("connect_editor")).structuredContent.connected).toBe(
       false,
     );
     await page.getByRole("button", { name: "Cancel", exact: true }).click();
+    await expect(
+      page.getByRole("button", {
+        name: "MCP connection: Disconnected",
+        exact: true,
+      }),
+    ).toBeVisible();
     expect((await tool("connect_editor")).structuredContent.connected).toBe(
       false,
     );
@@ -96,12 +114,38 @@ test("HTTPS editor pairs only after approval and supports MCP edits, preview, an
         async () => (await tool("connect_editor")).structuredContent.connected,
       )
       .toBe(true);
+    const connected = page.getByRole("button", {
+      name: "MCP connection: Connected",
+      exact: true,
+    });
+    await expect(connected).toBeVisible();
+    const toast = page
+      .getByRole("status")
+      .filter({ hasText: "AI agent connected to this project." });
+    await expect(toast).toBeVisible();
+    await toast.getByRole("button", { name: "Dismiss notification" }).click();
+    await expect(toast).toHaveCount(0);
+    await expect(connected).toBeVisible();
+    await connected.click();
+    const details = page.getByRole("dialog", {
+      name: "MCP connection",
+      exact: true,
+    });
+    await expect(details).toContainText("https-editor-test");
+    await expect(details).toContainText("Any readable directory");
+    await expect(details).not.toContainText("token=");
     const before = (await tool("inspect_project")).structuredContent.project;
+    await expect(
+      details.getByText("inspect_project", { exact: true }),
+    ).toBeVisible();
     await tool("apply_edits", {
       expectedRevision: before.revision,
       idempotencyKey: "https-rename",
       operations: [{ op: "project", patch: { name: "Paired hosted editor" } }],
     });
+    await expect(details).toContainText("Paired hosted editor");
+    await page.screenshot({ path: testInfo.outputPath("mcp-connected.png") });
+    await details.getByRole("button", { name: "Done", exact: true }).click();
     await expect(
       page.getByLabel("Project menu", { exact: true }),
     ).toContainText("Paired hosted editor");
@@ -109,6 +153,15 @@ test("HTTPS editor pairs only after approval and supports MCP edits, preview, an
       action: "import",
       paths: [resolve("public/demo/dusk.mp4")],
     });
+    const largeImport = await tool("manage_assets", {
+      action: "import",
+      paths: [largeFile],
+    });
+    expect(
+      largeImport.structuredContent.items.find(
+        (item: { name: string }) => item.name === "large.jpg",
+      ).size,
+    ).toBe(largeSize);
     const state = (await tool("inspect_project")).structuredContent;
     expect(state.missingAssets).toEqual([]);
     await tool("manage_assets", {
@@ -148,7 +201,42 @@ test("HTTPS editor pairs only after approval and supports MCP edits, preview, an
     await expect(
       page.getByRole("link", { name: "Download video", exact: true }),
     ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Close dialog", exact: true })
+      .click();
+    await connected.click();
+    await details
+      .getByRole("button", { name: "Disconnect agent", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", {
+        name: "MCP connection: Disconnected",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect
+      .poll(
+        async () => (await tool("connect_editor")).structuredContent.connected,
+      )
+      .toBe(false);
+    await page.goto((await tool("connect_editor")).structuredContent.url);
+    await page.getByRole("button", { name: "Connect", exact: true }).click();
+    await expect(connected).toBeVisible();
+    await expect(details.getByRole("status")).toHaveText("Connected");
+    child.kill();
+    await expect(
+      page.getByRole("button", {
+        name: "MCP connection: Disconnected",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(details.getByRole("status")).toHaveText("Disconnected");
+    await expect(details).toContainText("MCP disconnected");
+    await page.screenshot({
+      path: testInfo.outputPath("mcp-disconnected.png"),
+    });
   } finally {
     child.kill();
+    await rm(temporary, { recursive: true, force: true });
   }
 });

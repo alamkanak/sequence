@@ -38,7 +38,7 @@ local server to your AI app's MCP settings (Claude Desktop/Cursor format):
   "mcpServers": {
     "sequence": {
       "command": "npx",
-      "args": ["--yes", "https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.1.0.tgz"]
+      "args": ["--yes", "https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.2.0.tgz"]
     }
   }
 }
@@ -125,7 +125,9 @@ pairing link in Chrome or Edge and approve the connection. Keep that tab open.
 The client starts the companion automatically; no build or deployment is needed.
 Restart the MCP connection and pair again after changing companion code or tool
 schemas. For agent file imports, append `"--allow-media", "/absolute/media/path"`
-to `args`.
+to `args`, or `"--allow-media-anywhere"` to allow any readable directory. Binary
+transfers have no fixed file-size limit. The editor toolbar shows live MCP status;
+click it for client details, media permissions, activity, and a disconnect action.
 
 Performance measurements and benchmark instructions: [BENCHMARK.md](BENCHMARK.md).
 

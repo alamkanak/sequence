@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { notifications } from "./notifications";
 import {
   editProject,
   emptyProject,
@@ -35,6 +36,9 @@ export const store = {
   },
   patch: (patch: Partial<State>) => {
     state = { ...state, ...patch };
+    // Preserve error details for inline forms while presenting global notices
+    // through the shared, dismissible toast system.
+    if (patch.error) notifications.show(patch.error, { tone: "error" });
     emit();
   },
   replace: (project: Project, history = true) => {

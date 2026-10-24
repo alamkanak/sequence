@@ -675,8 +675,9 @@ function Guide({ workflow }: { workflow: boolean }) {
               Import media in the browser, or append <code>--allow-media</code>{" "}
               and an absolute directory path to your MCP arguments. Repeat for
               additional directories. Agent imports are limited to those
-              directories and 64 MiB per file; use the browser picker for larger
-              files.
+              directories. Use <code>--allow-media-anywhere</code> to permit any
+              readable directory. Binary transfers have no fixed file-size
+              limit.
             </p>
             <Note title="Your browser owns the project">
               Project data and requested preview images are shared with your

@@ -481,13 +481,13 @@ const assetActions = [
             .string()
             .min(1)
             .describe(
-              "Absolute local file path under a directory permitted with --allow-media.",
+              "Absolute local file path. Requires --allow-media for its directory or --allow-media-anywhere.",
             ),
         )
         .min(1)
         .max(20)
         .describe(
-          "One to twenty file paths. Files larger than 64 MiB must use the browser picker.",
+          "One to twenty file paths. Imports use binary transfers without a fixed file-size limit. The companion must allow each directory or use --allow-media-anywhere.",
         ),
     })
     .describe(
@@ -816,7 +816,7 @@ export const tools = {
     title: "Manage assets",
     category: "Editing",
     description:
-      "List imported assets, place available media on the timeline, or import local files. Requires an approved connected editor. Choose action list, place or import and supply only that action's fields. Imports are limited to --allow-media directories and 64 MiB per file; use the browser picker for larger files. Placement changes the project revision; inspect again before apply_edits.",
+      "List imported assets, place available media on the timeline, or import local files. Requires an approved connected editor. Choose action list, place or import and supply only that action's fields. Imports require --allow-media directories or --allow-media-anywhere. Files transfer directly to the browser without a fixed file-size limit. Placement changes the project revision; inspect again before apply_edits.",
     input: z.discriminatedUnion("action", assetActions),
     output: z.union([
       assetResult,
@@ -1002,20 +1002,31 @@ export type ToolRequest = {
   [N in ToolName]: { name: N; args: ToolInput<N> };
 }[ToolName];
 
-// Public import paths are resolved to bytes by the local companion. The browser
-// receives a separate, strict transport contract; clients cannot supply files.
-const importedFile = z.strictObject({
+// The companion opens authorized files and sends short-lived transfer IDs.
+// The browser fetches binary bytes directly; clients cannot supply transfer IDs.
+export const importedFileSchema = z.strictObject({
+  id: z.uuid(),
   name: z.string().min(1),
   type: z.string(),
-  data: z.string().max(96 * 1024 * 1024),
+  size: z.number().int().nonnegative(),
 });
+export const connectionInfoSchema = z.strictObject({
+  serverName: z.string(),
+  serverVersion: z.string(),
+  client: z.strictObject({ name: z.string(), version: z.string() }).nullable(),
+  mediaAccess: z.strictObject({
+    mode: z.enum(["none", "directories", "anywhere"]),
+    directories: z.array(z.string()),
+  }),
+});
+export type ConnectionInfo = z.infer<typeof connectionInfoSchema>;
 export type BrowserToolRequest =
   | Exclude<ToolRequest, { name: "connect_editor" } | { name: "manage_assets" }>
   | {
       name: "manage_assets";
       args:
         | Exclude<ToolInput<"manage_assets">, { action: "import" }>
-        | { action: "import"; files: z.infer<typeof importedFile>[] };
+        | { action: "import"; files: z.infer<typeof importedFileSchema>[] };
     };
 export function parseBrowserRequest(
   name: unknown,
@@ -1033,7 +1044,7 @@ export function parseBrowserRequest(
       assetActions[1],
       z.strictObject({
         action: z.literal("import"),
-        files: z.array(importedFile).min(1).max(20),
+        files: z.array(importedFileSchema).min(1).max(20),
       }),
     ]);
     return { name, args: schema.parse(args) };
