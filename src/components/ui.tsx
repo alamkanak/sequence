@@ -2,6 +2,7 @@ import {
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
+  type Ref,
   useEffect,
   useState,
   useRef,
@@ -31,7 +32,7 @@ export function Button({
   textSize = "xs",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "ghost" | "danger";
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "overlay";
   iconOnly?: boolean;
   textSize?: "xs" | "sm";
 }) {
@@ -46,9 +47,11 @@ export function Button({
           ? "bg-indigo-600 text-white hover:bg-indigo-700"
           : variant === "danger"
             ? "bg-red-500/10 text-red-600 hover:bg-red-500/15 [[data-theme=dark]_&]:text-red-400"
-            : variant === "ghost"
-              ? skin.hover
-              : cn("border", skin.border, skin.panel, skin.hover),
+            : variant === "overlay"
+              ? "border border-white/25 bg-zinc-900/85 text-white shadow-sm hover:border-indigo-300 hover:bg-indigo-600 focus-visible:bg-indigo-600"
+              : variant === "ghost"
+                ? skin.hover
+                : cn("border", skin.border, skin.panel, skin.hover),
         className,
       )}
     >
@@ -63,6 +66,7 @@ export function IconButton({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   label: string;
+  variant?: Parameters<typeof Button>[0]["variant"];
   size?: "xs" | "sm" | "md" | "lg";
 }) {
   return (
@@ -87,7 +91,11 @@ export function IconButton({
     </Button>
   );
 }
-export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
+export function Input(
+  props: InputHTMLAttributes<HTMLInputElement> & {
+    ref?: Ref<HTMLInputElement>;
+  },
+) {
   return (
     <input
       {...props}
@@ -165,6 +173,12 @@ export function Modal({
       ).filter((el) => el.getClientRects().length > 0);
     focusable()[0]?.focus();
     const listener = (event: KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        Array.from(document.querySelectorAll('[role="dialog"]')).at(-1) !==
+          dialogRef.current
+      )
+        return;
       if (event.key === "Escape") closeRef.current();
       if (event.key === "Tab") {
         const nodes = focusable(),

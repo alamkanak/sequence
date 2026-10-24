@@ -11,12 +11,17 @@ timeline through the built-in **MCP server**. Preview and render on your device.
 ## What you can do
 
 - Ask Claude Code or Codex to edit your project through MCP.
-- Import video, audio, and images into a multitrack timeline.
+- Import video, audio, and images by browsing, dropping files, or pasting from the clipboard.
 - Trim, split, change speed, and adjust audio with volume points.
 - Add text, shapes, gradients, animations, and transitions.
 - Preview your edits and export MP4 or WebM on your device.
 
 Includes resizable panels, snapping, undo/redo, and light/dark themes.
+
+Press **⌘K / Ctrl+K** to search actions, navigate to media or segments, and jump
+to settings for your selection. **⌘I / Ctrl+I** opens import options; **⌘V / Ctrl+V**
+pastes media or a copied timeline segment. Clipboard support depends on the browser;
+if the Paste button cannot read it, use the keyboard shortcut or browse files.
 
 ## AI editing with MCP
 

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   UploadSimpleIcon,
   PlusIcon,
@@ -20,7 +20,6 @@ import { useStore, store } from "../core/store";
 import {
   addAsset,
   addElement,
-  importFiles,
   loadDemo,
   removeAsset,
   relinkAsset,
@@ -32,7 +31,17 @@ import { assetFiles } from "../engine/client";
 import { cn, skin, Button, IconButton, Input, Modal } from "./ui";
 import { ContextMenu } from "./ContextMenu";
 import { editor } from "./editor-ui";
-export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
+export function MediaPanel({
+  widthClass = "w-60",
+  onImport,
+  onFiles,
+  importing,
+}: {
+  widthClass?: string;
+  onImport: () => void;
+  onFiles: (files: File[]) => void;
+  importing: boolean;
+}) {
   const { project, tab } = useStore();
   const drag = useRef<{
     id: string;
@@ -40,8 +49,7 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
     y: number;
     active: boolean;
   } | null>(null);
-  const picker = useRef<HTMLInputElement>(null),
-    [loading, setLoading] = useState(false),
+  const [loading, setLoading] = useState(false),
     [search, setSearch] = useState(""),
     [dropping, setDropping] = useState(false),
     [removing, setRemoving] = useState<Asset | null>(null);
@@ -91,18 +99,33 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
     y: number;
     trigger: HTMLElement;
   } | null>(null);
-  const importMedia = useCallback(async (files: File[]) => {
-    store.patch({ tab: "media" });
-    setLoading(true);
-    try {
-      await importFiles(files);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    const reveal = (event: Event) => {
+      const id = (event as CustomEvent<string>).detail;
+      store.patch({ tab: "media" });
+      setSearch("");
+      requestAnimationFrame(() => {
+        const node = Array.from(
+          document.querySelectorAll<HTMLElement>("[data-asset-id]"),
+        ).find((node) => node.dataset.assetId === id);
+        if (!node) return;
+        node.scrollIntoView({ block: "nearest" });
+        node.focus();
+        node.dispatchEvent(
+          new KeyboardEvent("keydown", {
+            key: "ContextMenu",
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      });
+    };
+    window.addEventListener("sequence-media-actions", reveal);
+    return () => window.removeEventListener("sequence-media-actions", reveal);
   }, []);
   const fileDrop = useMemo(
-    () => createFileDropTarget(importMedia, setDropping),
-    [importMedia],
+    () => createFileDropTarget(onFiles, setDropping),
+    [onFiles],
   );
   const uses = project.clips.filter((c) => c.assetId === removing?.id);
   const lockedUse = uses.some(
@@ -161,25 +184,13 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
                 void restoreMedia(files);
               }}
             />
-            <input
-              ref={picker}
-              type="file"
-              multiple
-              accept="video/*,audio/*,image/*,.mkv,.mov,.m4a,.flac"
-              className="hidden"
-              aria-label="Import media files"
-              onChange={(e) => {
-                void importMedia(Array.from(e.target.files || []));
-                e.target.value = "";
-              }}
-            />
             <Button
-              onClick={() => picker.current?.click()}
-              disabled={loading}
+              onClick={onImport}
+              disabled={loading || importing}
               className="w-full justify-start"
             >
               <UploadSimpleIcon size={15} />
-              {loading ? "Reading media…" : "Import media"}
+              {importing ? "Reading media…" : "Import media"}
               <kbd className={cn("ml-auto font-sans text-xs", skin.muted)}>
                 ⌘I
               </kbd>
@@ -248,6 +259,7 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
                   key={a.id}
                   role="group"
                   aria-label={`Media ${a.name}`}
+                  data-asset-id={a.id}
                   tabIndex={0}
                   aria-haspopup="menu"
                   aria-expanded={context?.asset.id === a.id}
@@ -369,9 +381,10 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
                     <IconButton
                       label={`Add ${a.name} to timeline`}
                       size="sm"
+                      variant="overlay"
                       onClick={() => store.safe(() => addAsset(a.id))}
                       disabled={!assetFiles.has(a.id)}
-                      className="absolute top-1 right-1 bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-black/80"
+                      className="absolute top-1 right-1 opacity-100 transition-colors"
                     >
                       <PlusIcon size={18} />
                     </IconButton>
@@ -434,12 +447,12 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
                 <UploadSimpleIcon size={28} className={skin.muted} />
                 <p className="text-sm font-medium">Add your first clip</p>
                 <p className={cn("text-xs leading-relaxed", skin.muted)}>
-                  Drop videos, audio, or images.
+                  Drop videos, audio, or images, or paste from your clipboard.
                   <br />
                   Everything stays on your device.
                 </p>
-                <Button variant="ghost" onClick={() => picker.current?.click()}>
-                  Browse files <ArrowUpRightIcon size={12} />
+                <Button variant="ghost" onClick={onImport}>
+                  Choose media <ArrowUpRightIcon size={12} />
                 </Button>
               </div>
             )}
@@ -498,18 +511,7 @@ export function MediaPanel({ widthClass = "w-60" }: { widthClass?: string }) {
                 {
                   name: "Image / GIF",
                   Icon: ImageIcon,
-                  action: () => {
-                    store.patch({ tab: "media" });
-                    setTimeout(
-                      () =>
-                        document
-                          .querySelector<HTMLInputElement>(
-                            '[aria-label="Import media files"]',
-                          )
-                          ?.click(),
-                      0,
-                    );
-                  },
+                  action: onImport,
                 },
               ].map(({ name, Icon, action }) => (
                 <button

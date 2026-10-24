@@ -1,4 +1,12 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   StackSimpleIcon,
   CaretDownIcon,
@@ -13,6 +21,7 @@ import {
   XIcon,
   KeyboardIcon,
   SlidersHorizontalIcon,
+  MagnifyingGlassIcon,
 } from "./icons";
 import { store, useStore } from "../core/store";
 import { emptyProject, validateProject } from "../core/model";
@@ -25,6 +34,14 @@ import {
   pasteTimelineClip,
   hasTimelineClipboard,
 } from "../core/actions";
+import { clipboardFiles, readClipboardMedia } from "../core/media-clipboard";
+import { ImportDialog } from "./ImportDialog";
+import { CommandPalette } from "./CommandPalette";
+import {
+  editorCommands,
+  saveProjectFile,
+  type EditorDialog,
+} from "./editor-commands";
 import { createFileDropTarget } from "../core/file-drop";
 import { connectCompanion } from "../core/automation";
 import { useExport } from "../engine/export";
@@ -45,14 +62,56 @@ const PerformanceDialog = lazy(() =>
 export function Editor() {
   const { project, error } = useStore(),
     job = useExport();
-  const [dialog, setDialog] = useState<
-    "export" | "performance" | "shortcuts" | null
-  >(null);
+  const [dialog, setDialog] = useState<EditorDialog>(null);
+  const [commandsOpen, setCommandsOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState("");
+  const [readingClipboard, setReadingClipboard] = useState(false);
+  const readingClipboardRef = useRef(false);
+  const importingRef = useRef(false);
+  const mediaInput = useRef<HTMLInputElement>(null);
+  const importMedia = useCallback(async (files: File[]) => {
+    if (!files.length || importingRef.current) return;
+    importingRef.current = true;
+    setImporting(true);
+    setImportError("");
+    store.patch({ tab: "media", error: "" });
+    try {
+      const result = await importFiles(files);
+      if (!result.failed)
+        setDialog((current) => (current === "import" ? null : current));
+      else setImportError(store.get().error);
+    } finally {
+      importingRef.current = false;
+      setImporting(false);
+    }
+  }, []);
+  const pasteMediaFromClipboard = useCallback(async () => {
+    if (readingClipboardRef.current || importingRef.current) return;
+    readingClipboardRef.current = true;
+    setDialog("import");
+    setReadingClipboard(true);
+    setImportError("");
+    try {
+      await importMedia(await readClipboardMedia());
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : String(error));
+    } finally {
+      readingClipboardRef.current = false;
+      setReadingClipboard(false);
+    }
+  }, [importMedia]);
+  useEffect(() => {
+    if (dialog !== "import") setImportError("");
+  }, [dialog]);
   const [approveCompanion, setApproveCompanion] = useState<(() => void) | null>(
     null,
   );
   const projectInput = useRef<HTMLInputElement>(null);
-  const fileDrop = useMemo(() => createFileDropTarget(importFiles), []);
+  const fileDrop = useMemo(
+    () => createFileDropTarget(importMedia),
+    [importMedia],
+  );
   const [left, setLeft] = usePanelSize("media", 240, 200, 600),
     [right, setRight] = usePanelSize("properties", 240, 200, 600),
     [timelineHeight, setTimelineHeight] = usePanelSize(
@@ -93,8 +152,20 @@ export function Editor() {
     setTimelineHeight((v) => panelPixels(v, 160, timelineMax));
   }, [leftMax, rightMax, timelineMax, setLeft, setRight, setTimelineHeight]);
   useEffect(() => {
+    const commands = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!event.repeat) setCommandsOpen((open) => !open);
+      }
+    };
+    window.addEventListener("keydown", commands, true);
+    return () => window.removeEventListener("keydown", commands, true);
+  }, []);
+  useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.defaultPrevented) return;
+      const mod = e.metaKey || e.ctrlKey;
       if (document.querySelector('[role="dialog"]')) return;
       if (
         (e.target as HTMLElement).matches(
@@ -102,7 +173,6 @@ export function Editor() {
         )
       )
         return;
-      const mod = e.metaKey || e.ctrlKey;
       const s = store.get(),
         c = s.project.clips.find((c) => c.id === s.selected);
       if (e.code === "Space") {
@@ -122,23 +192,13 @@ export function Editor() {
         e.preventDefault();
         e.shiftKey ? store.redo() : store.undo();
       }
-      if (mod && e.key.toLowerCase() === "c" && c) {
-        e.preventDefault();
-        copySelectedClip();
-      }
-      if (mod && e.key.toLowerCase() === "v" && hasTimelineClipboard()) {
-        e.preventDefault();
-        pasteTimelineClip();
-      }
       if (mod && e.key.toLowerCase() === "d") {
         e.preventDefault();
         duplicateClip();
       }
       if (mod && e.key.toLowerCase() === "i") {
         e.preventDefault();
-        document
-          .querySelector<HTMLInputElement>('[aria-label="Import media files"]')
-          ?.click();
+        setDialog("import");
       }
       if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
         e.preventDefault();
@@ -148,12 +208,7 @@ export function Editor() {
       }
       if (mod && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        download(
-          new Blob([JSON.stringify(s.project, null, 2)], {
-            type: "application/json",
-          }),
-          `${s.project.name}.sequence.json`,
-        );
+        saveProjectFile();
       }
     };
     window.addEventListener("keydown", handler);
@@ -166,6 +221,57 @@ export function Editor() {
       transport.pause();
     };
   }, []);
+  useEffect(() => {
+    const editable = (event: ClipboardEvent) =>
+      event.target instanceof Element &&
+      event.target.closest("input,textarea,select,[contenteditable]");
+    const activeModal = () =>
+      Array.from(document.querySelectorAll('[role="dialog"]')).at(-1);
+    const copy = (event: ClipboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        editable(event) ||
+        activeModal() ||
+        !event.clipboardData
+      )
+        return;
+      const { project, selected } = store.get();
+      if (!project.clips.some((clip) => clip.id === selected)) return;
+      copySelectedClip();
+      event.clipboardData.setData("text/plain", "Sequence timeline segment");
+      event.preventDefault();
+    };
+    const paste = (event: ClipboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        editable(event) ||
+        commandsOpen ||
+        !event.clipboardData
+      )
+        return;
+      const modal = activeModal();
+      if (modal && modal.getAttribute("aria-label") !== "Import media") return;
+      const files = clipboardFiles(event.clipboardData);
+      if (files.length) {
+        event.preventDefault();
+        void importMedia(files);
+      } else if (
+        !modal &&
+        hasTimelineClipboard() &&
+        event.clipboardData.getData("text/plain") ===
+          "Sequence timeline segment"
+      ) {
+        event.preventDefault();
+        pasteTimelineClip();
+      }
+    };
+    window.addEventListener("copy", copy);
+    window.addEventListener("paste", paste);
+    return () => {
+      window.removeEventListener("copy", copy);
+      window.removeEventListener("paste", paste);
+    };
+  }, [commandsOpen, importMedia]);
   return (
     <div
       ref={editorRef}
@@ -174,30 +280,6 @@ export function Editor() {
         skin.app,
       )}
       {...fileDrop}
-      onCopy={(e) => {
-        if (
-          (e.target as HTMLElement).closest(
-            "input,textarea,select,[contenteditable]",
-          )
-        )
-          return;
-        const { project, selected } = store.get();
-        if (!project.clips.some((c) => c.id === selected)) return;
-        copySelectedClip();
-        e.clipboardData.setData("text/plain", "Sequence timeline segment");
-        e.preventDefault();
-      }}
-      onPaste={(e) => {
-        if (
-          (e.target as HTMLElement).closest(
-            "input,textarea,select,[contenteditable]",
-          )
-        )
-          return;
-        if (!hasTimelineClipboard()) return;
-        e.preventDefault();
-        pasteTimelineClip();
-      }}
     >
       <header
         className={cn(
@@ -314,6 +396,13 @@ export function Editor() {
           </IconButton>
           <span className={cn("mx-2 h-4 border-l", skin.border)} />
           <IconButton
+            label="Commands"
+            title="Commands (⌘K / Ctrl+K)"
+            onClick={() => setCommandsOpen(true)}
+          >
+            <MagnifyingGlassIcon size={18} />
+          </IconButton>
+          <IconButton
             label="Keyboard shortcuts"
             onClick={() => setDialog("shortcuts")}
           >
@@ -338,6 +427,19 @@ export function Editor() {
           </Button>
         </div>
       </header>
+      <input
+        ref={mediaInput}
+        type="file"
+        multiple
+        accept="video/*,audio/*,image/*,.mkv,.mov,.m4a,.flac"
+        className="hidden"
+        aria-label="Import media files"
+        onChange={(event) => {
+          const files = Array.from(event.target.files || []);
+          event.target.value = "";
+          void importMedia(files);
+        }}
+      />
       <input
         ref={projectInput}
         type="file"
@@ -377,7 +479,12 @@ export function Editor() {
         </div>
       )}
       <main ref={mainRef} className="flex min-h-60 flex-1">
-        <MediaPanel widthClass={panelSizeClass(left)} />
+        <MediaPanel
+          widthClass={panelSizeClass(left)}
+          onImport={() => setDialog("import")}
+          onFiles={importMedia}
+          importing={importing}
+        />
         <PanelDivider
           label="Resize media panel"
           value={left}
@@ -417,6 +524,18 @@ export function Editor() {
           <PerformanceDialog onClose={() => setDialog(null)} />
         )}
       </Suspense>
+      {dialog === "import" && (
+        <ImportDialog
+          onClose={() => setDialog(null)}
+          onBrowse={() => mediaInput.current?.click()}
+          onFiles={importMedia}
+          importing={importing}
+          error={importError}
+          onError={setImportError}
+          onPasteClipboard={pasteMediaFromClipboard}
+          readingClipboard={readingClipboard}
+        />
+      )}
       {approveCompanion && (
         <Modal
           title="Connect AI agent"
@@ -463,7 +582,8 @@ export function Editor() {
               ["⌘ / Ctrl + Shift + Z", "Redo"],
               ["⌘ / Ctrl + D", "Duplicate"],
               ["⌘ / Ctrl + C", "Copy selected segment"],
-              ["⌘ / Ctrl + V", "Paste at playhead"],
+              ["⌘ / Ctrl + V", "Paste media or copied segment"],
+              ["⌘ / Ctrl + K", "Search all commands"],
               ["Corner / side drag", "Proportional / one-axis resize"],
               ["Shift + corner drag", "Free aspect ratio"],
               ["⌘ / Ctrl + I", "Import media"],
@@ -489,6 +609,17 @@ export function Editor() {
             ))}
           </div>
         </Modal>
+      )}
+      {commandsOpen && editorRef.current && (
+        <CommandPalette
+          root={editorRef.current}
+          commands={editorCommands(
+            setDialog,
+            () => projectInput.current?.click(),
+            pasteMediaFromClipboard,
+          )}
+          onClose={() => setCommandsOpen(false)}
+        />
       )}
     </div>
   );

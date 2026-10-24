@@ -23,6 +23,7 @@ let state: State = {
 const listeners = new Set<() => void>();
 const past: Project[] = [];
 const future: Project[] = [];
+let previewDepth = 0;
 const emit = () => listeners.forEach((l) => l());
 export const store = {
   get: () => state,
@@ -38,11 +39,11 @@ export const store = {
   },
   replace: (project: Project, history = true) => {
     const next = validateProject(project);
-    if (history) {
+    if (history && !previewDepth) {
       past.push(state.project);
       if (past.length > 80) past.shift();
     }
-    future.length = 0;
+    if (!previewDepth) future.length = 0;
     state = { ...state, project: next, dirty: true };
     emit();
   },
@@ -77,6 +78,15 @@ export const store = {
         dirty: true,
       };
       emit();
+    }
+  },
+  // Live controls can render drafts without adding undo entries or losing redo.
+  preview: (change: () => void) => {
+    previewDepth++;
+    try {
+      change();
+    } finally {
+      previewDepth--;
     }
   },
   beginHistoryGroup: () => {

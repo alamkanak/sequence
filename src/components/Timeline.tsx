@@ -897,6 +897,7 @@ export function Timeline({
             {p.tracks.map((t, i) => (
               <div
                 key={t.id}
+                data-track-controls
                 className={cn(
                   "group flex h-16 flex-col justify-center gap-1 border-b px-3",
                   skin.border,

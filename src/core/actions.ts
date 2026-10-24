@@ -121,6 +121,7 @@ export async function relinkFiles(files: File[]) {
 }
 
 export async function importFiles(files: File[]) {
+  let failed = 0;
   for (const file of files) {
     try {
       const projectId = store.get().project.id;
@@ -141,11 +142,13 @@ export async function importFiles(files: File[]) {
         await attachFile(asset, file);
       }
     } catch (e) {
+      failed++;
       store.patch({
         error: `${file.name}: ${e instanceof Error ? e.message : e}`,
       });
     }
   }
+  return { imported: files.length - failed, failed };
 }
 export function removeAsset(id: string) {
   transport.pause();

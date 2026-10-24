@@ -107,14 +107,14 @@ test("compact color fields validate hex, support cancellation, and share the sel
   await hex.fill("#FF5533");
   await hex.press("Enter");
   await expect(hex).toHaveValue("ff5533");
-  await expect(picker).toHaveValue("#ff5533");
+  await expect(picker).toHaveAttribute("aria-expanded", "false");
   await hex.fill("zzzzzz");
   await hex.press("Tab");
   await expect(hex).toHaveValue("ff5533");
   await hex.fill("112233");
   await hex.press("Escape");
   await expect(hex).toHaveValue("ff5533");
-  await expect(picker).toHaveValue("#ff5533");
+  await expect(picker).toHaveAttribute("aria-expanded", "false");
   expect((await picker.boundingBox())!.width).toBeLessThanOrEqual(24);
   await expect
     .poll(() =>
