@@ -243,6 +243,7 @@ export function Landing() {
                 ["#features", "Features"],
                 ["#ai-editing", "AI editing"],
                 ["#privacy", "Privacy"],
+                [`${import.meta.env.BASE_URL}docs/mcp/`, "Docs"],
               ].map(([href, label]) => (
                 <a
                   key={href}
@@ -542,8 +543,6 @@ export function Landing() {
           >
             <a
               href={AI_SETUP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 hover:text-indigo-600 [[data-theme=dark]_&]:hover:text-indigo-300"
             >
               Documentation <ArrowUpRightIcon size={14} aria-hidden="true" />

@@ -6,6 +6,7 @@ import { dirname, resolve } from "node:path";
 import assert from "node:assert/strict";
 import WebSocket from "ws";
 import { createServer } from "node:http";
+import { toolCatalog } from "../companion/contracts.ts";
 
 const version = JSON.parse(await readFile("package.json", "utf8")).version;
 let packageSource =
@@ -120,6 +121,60 @@ try {
   assert.equal(list.result.tools.length, 7);
   assert.ok(list.result.tools.some((t) => t.name === "connect_editor"));
   assert.ok(list.result.tools.some((t) => t.name === "apply_edits"));
+  for (const definition of toolCatalog()) {
+    const actual = list.result.tools.find(
+      (tool) => tool.name === definition.name,
+    );
+    for (const key of [
+      "name",
+      "title",
+      "description",
+      "inputSchema",
+      "outputSchema",
+    ])
+      assert.deepEqual(
+        actual[key],
+        definition[key],
+        `${definition.name}.${key} differs from documentation`,
+      );
+  }
+  if (packageSource) {
+    const published = JSON.parse(
+      await readFile("dist/docs/mcp/tools.json", "utf8"),
+    );
+    assert.deepEqual(
+      published,
+      toolCatalog(),
+      "Built documentation differs from the packaged server contracts",
+    );
+  }
+  for (const [name, args] of [
+    ["connect_editor", { surprise: true }],
+    ["manage_assets", { action: "place" }],
+    ["manage_assets", { action: "list", paths: ["/tmp/file.mp4"] }],
+    ["manage_jobs", { action: "cancel" }],
+    ["preview_frame", { time: "2" }],
+    ["export_video", { settings: { width: 321 } }],
+    [
+      "apply_edits",
+      {
+        expectedRevision: 0,
+        idempotencyKey: "invalid",
+        operations: [{ op: "split", id: "clip", time: 1, unknown: true }],
+      },
+    ],
+  ]) {
+    const response = await call("tools/call", { name, arguments: args });
+    assert.ok(
+      response.error || response.result?.isError,
+      `${name} accepted invalid arguments`,
+    );
+    assert.doesNotMatch(
+      JSON.stringify(response),
+      /Call connect_editor/,
+      "Invalid arguments reached the handler",
+    );
+  }
   const inspection = await tool("inspect_project");
   assert.equal(inspection.isError, true);
   assert.match(inspection.content[0].text, /connect_editor/);
@@ -159,7 +214,7 @@ try {
     browser.send(
       JSON.stringify({
         id: request.id,
-        result: { project: { id: "paired-project", revision: 3 } },
+        result: { revision: 3 },
       }),
     );
   });
@@ -168,8 +223,11 @@ try {
     true,
   );
   assert.equal(await rejected(connectUrl, page.origin), 409);
-  const forwarded = await tool("inspect_project");
-  assert.equal(forwarded.structuredContent.project.id, "paired-project");
+  const forwarded = await tool("manage_assets", {
+    action: "place",
+    assetId: "asset-1",
+  });
+  assert.equal(forwarded.structuredContent.revision, 3);
   await new Promise((resolve) => {
     browser.once("close", resolve);
     browser.close();

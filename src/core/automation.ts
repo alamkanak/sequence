@@ -1,5 +1,8 @@
 import { store } from "./store";
-import { validateProject, type Edit } from "./model";
+import {
+  parseBrowserRequest,
+  type ToolOutput,
+} from "../../companion/contracts.ts";
 import { transport } from "../engine/transport";
 import { assetFiles } from "../engine/client";
 import { exports } from "../engine/export";
@@ -10,8 +13,9 @@ import {
   parseCompanionLink,
   withoutCompanionCredentials,
 } from "./companion-link";
-const receipts = new Map<string, unknown>();
-export async function handleTool(name: string, args: Record<string, any>) {
+const receipts = new Map<string, ToolOutput<"apply_edits">>();
+export async function handleTool(toolName: unknown, input: unknown) {
+  const { name, args } = parseBrowserRequest(toolName, input);
   const p = store.get().project;
   if (name === "inspect_project") {
     return {
@@ -42,17 +46,10 @@ export async function handleTool(name: string, args: Record<string, any>) {
     };
   }
   if (name === "apply_edits") {
-    if (
-      typeof args.idempotencyKey !== "string" ||
-      typeof args.expectedRevision !== "number"
-    )
-      throw new Error("expectedRevision and idempotencyKey are required");
     if (receipts.has(args.idempotencyKey))
       return receipts.get(args.idempotencyKey);
     if (args.expectedRevision !== p.revision)
       throw new Error("Revision conflict; inspect the project again");
-    if (!Array.isArray(args.operations) || args.operations.length > 500)
-      throw new Error("Supply at most 500 typed operations");
     if (
       args.operations.length === 1 &&
       ["undo", "redo"].includes(args.operations[0].op)
@@ -67,30 +64,14 @@ export async function handleTool(name: string, args: Record<string, any>) {
       if (!args.validateOnly) receipts.set(args.idempotencyKey, result);
       return result;
     }
-    const allowed = [
-      "project",
-      "add_track",
-      "update_track",
-      "delete_track",
-      "add_clip",
-      "update_clip",
-      "delete_clip",
-      "delete_asset",
-      "split",
-      "transition",
-    ];
-    for (const op of args.operations)
-      if (!allowed.includes(op.op))
-        throw new Error(`Unsupported operation: ${op.op}`);
-    const next = store.apply(
-      args.operations as Edit[],
-      args.expectedRevision,
-      !!args.validateOnly,
+    const edits = args.operations.filter(
+      (op) => op.op !== "undo" && op.op !== "redo",
     );
+    const next = store.apply(edits, args.expectedRevision, !!args.validateOnly);
     const result = {
       revision: next.revision,
       projectId: next.id,
-      validated: true,
+      validated: true as const,
       applied: !args.validateOnly,
     };
     if (!args.validateOnly) {
@@ -108,10 +89,6 @@ export async function handleTool(name: string, args: Record<string, any>) {
       return { revision: store.get().project.revision };
     }
     if (args.action === "import") {
-      if (!Array.isArray(args.files))
-        throw new Error(
-          "The companion must provide explicitly allowed local files",
-        );
       const imported: File[] = [];
       for (const item of args.files) {
         if (item.data.length > 96 * 1024 * 1024)
@@ -126,7 +103,7 @@ export async function handleTool(name: string, args: Record<string, any>) {
   }
   if (name === "preview_frame") {
     if (!transport.engine) throw new Error("Open the editor before previewing");
-    transport.seek(Number(args.time) || 0);
+    transport.seek(args.time);
     while (transport.engine.busy) await new Promise((r) => setTimeout(r, 10));
     await transport.engine.draw(transport.time, true);
     return {

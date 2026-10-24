@@ -4,7 +4,7 @@ A browser video editor for you and your AI agent. Edit by hand or let
 **Claude Code, Codex, Cursor, and other MCP-compatible agents** work on your
 timeline through the built-in **MCP server**. Preview and render on your device.
 
-**[Open Sequence](https://alamkanak.github.io/sequence/)** · **[Set up AI editing](#ai-editing-with-mcp)**
+**[Open Sequence](https://alamkanak.github.io/sequence/)** · **[MCP documentation](https://alamkanak.github.io/sequence/docs/mcp/)** · **[Set up AI editing](#ai-editing-with-mcp)**
 
 ![Sequence video editor with a multitrack timeline and preview](docs/images/screenshot.png)
 
@@ -51,7 +51,7 @@ prompted. Keep that tab open while the agent edits.
 
 The companion runs locally; editing and rendering stay in your browser. Your
 agent receives project data and any previews it requests. Requires an AI app
-with local MCP support. [Other clients and setup details](docs/MCP.md).
+with local MCP support. [Setup, typed tool reference, and examples](https://alamkanak.github.io/sequence/docs/mcp/).
 
 ## Your files stay local
 
@@ -78,6 +78,10 @@ npm ci
 npm run dev
 ```
 
+The same development server serves the [MCP docs](http://127.0.0.1:5173/docs/mcp/)
+at `/docs/mcp/`. Changes to tool schemas and descriptions update the reference
+automatically. No companion process or connected editor is needed to view docs.
+
 ## Deploy to GitHub Pages
 
 In **Settings → Pages**, select **GitHub Actions** as the source.
@@ -94,6 +98,13 @@ npm run check
 npm test
 npm run build
 ```
+
+Tool contracts live in `companion/contracts.ts`. Strict runtime schemas infer the
+TypeScript parameter types and supply the descriptions seen by MCP clients and
+the docs site. Define descriptions on every parameter and keep examples valid;
+the build checks both. `npm run build` publishes the editor, docs, downloadable
+tool schemas, and companion package together. CI checks that the packaged
+server's `tools/list` matches the generated reference.
 
 Performance measurements and benchmark instructions: [BENCHMARK.md](BENCHMARK.md).
 

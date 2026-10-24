@@ -64,6 +64,11 @@ the computer where your browser runs.
 
 ## Tools
 
+The [generated MCP reference](https://alamkanak.github.io/sequence/docs/mcp/)
+documents every parameter, editing operation, response schema, and example using
+the same descriptions exposed to agents. Run `npm run dev` and open `/docs/mcp/`
+to view it locally. The Pages build regenerates it from `companion/contracts.ts`.
+
 `connect_editor`, `inspect_project`, `manage_assets`, `apply_edits`,
 `preview_frame`, `export_video`, `manage_jobs`.
 

@@ -11,6 +11,7 @@ import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
+import ts from "typescript";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const app = JSON.parse(await readFile(resolve(root, "package.json"), "utf8"));
@@ -32,7 +33,7 @@ try {
     },
     homepage: "https://alamkanak.github.io/sequence/",
     bin: { "sequence-mcp": "server.mjs" },
-    files: ["server.mjs", "LICENSE", "README.md"],
+    files: ["server.mjs", "contracts.mjs", "LICENSE", "README.md"],
     engines: app.engines,
     dependencies: Object.fromEntries(
       ["@modelcontextprotocol/server", "ws", "zod"].map((name) => [
@@ -45,9 +46,28 @@ try {
     resolve(staging, "package.json"),
     JSON.stringify(manifest, null, 2) + "\n",
   );
-  await copyFile(
-    resolve(root, "companion/server.mjs"),
+  await writeFile(
     resolve(staging, "server.mjs"),
+    (await readFile(resolve(root, "companion/server.mjs"), "utf8")).replace(
+      '"./contracts.ts"',
+      '"./contracts.mjs"',
+    ),
+  );
+  const contracts = await readFile(
+    resolve(root, "companion/contracts.ts"),
+    "utf8",
+  );
+  await writeFile(
+    resolve(staging, "contracts.mjs"),
+    ts.transpileModule(
+      contracts.replace('"../package.json"', '"./package.json"'),
+      {
+        compilerOptions: {
+          module: ts.ModuleKind.ESNext,
+          target: ts.ScriptTarget.ES2022,
+        },
+      },
+    ).outputText,
   );
   await copyFile(resolve(root, "LICENSE"), resolve(staging, "LICENSE"));
   await writeFile(

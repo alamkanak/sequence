@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Connect your AI agent to Sequence. Explore typed MCP tools, parameters, editing operations, and examples."
+    />
+    <meta name="theme-color" content="#09090b" />
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+    <title>MCP documentation — Sequence</title>
+    <script>
+      try {
+        const t = localStorage.getItem("sequence-theme") || "system";
+        document.documentElement.dataset.theme =
+          t === "system"
+            ? matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light"
+            : t;
+      } catch {
+        document.documentElement.dataset.theme = matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches
+          ? "dark"
+          : "light";
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/docs/main.tsx"></script>
+  </body>
+</html>

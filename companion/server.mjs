@@ -6,9 +6,9 @@ import { resolve, dirname, extname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { WebSocketServer } from "ws";
-import { McpServer } from "@modelcontextprotocol/server";
+import { McpServer, fromJsonSchema } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
-import * as z from "zod/v4";
+import { tools, toolCatalog, serverVersion } from "./contracts.ts";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "dist");
 const port = Number(process.env.SEQUENCE_PORT || 0);
 const token = randomBytes(24).toString("hex");
@@ -167,164 +167,95 @@ async function call(tool, args) {
     browser.send(JSON.stringify({ id, tool, args }));
   });
 }
-const operations = z
-  .array(
-    z
-      .object({
-        op: z.enum([
-          "project",
-          "add_track",
-          "update_track",
-          "delete_track",
-          "add_clip",
-          "update_clip",
-          "delete_clip",
-          "delete_asset",
-          "split",
-          "transition",
-          "undo",
-          "redo",
-        ]),
-      })
-      .passthrough(),
-  )
-  .max(500);
 function buildServer() {
-  const mcp = new McpServer({ name: "sequence-editor", version: "0.1.0" });
-  const tools = [
-    [
-      "connect_editor",
-      "Start here: get the pairing link for the GitHub Pages editor and connection status. Show the link to the user and ask them to approve Connect AI agent in their browser. This connects to their current browser-local project; no repository clone or app build is needed.",
-      z.object({}),
-    ],
-    [
-      "inspect_project",
-      "Inspect the connected project, revision, stable IDs and codec/element capabilities.",
-      z.object({}),
-    ],
-    [
-      "manage_assets",
-      "List assets, place an imported asset, or import local files from a command-line allowed directory. Large media should use the browser file picker.",
-      z.object({
-        action: z.enum(["list", "place", "import"]),
-        assetId: z.string().optional(),
-        trackId: z.string().optional(),
-        start: z.number().nonnegative().optional(),
-        paths: z.array(z.string()).max(20).optional(),
-      }),
-    ],
-    [
-      "apply_edits",
-      "Apply an atomic typed editing batch. Inspect the project first; supply expectedRevision and a unique idempotencyKey. Supports validateOnly.",
-      z.object({
-        expectedRevision: z.number().int().nonnegative(),
-        idempotencyKey: z.string().min(1).max(160),
-        validateOnly: z.boolean().optional(),
-        operations,
-      }),
-    ],
-    [
-      "preview_frame",
-      "Render a timestamp and return the composed image.",
-      z.object({ time: z.number().nonnegative() }),
-    ],
-    [
-      "export_video",
-      "Start a browser-local export; returns a job ID. Default is SDR MP4/H.264/AAC.",
-      z.object({
-        settings: z
-          .object({
-            name: z.string().max(200).optional(),
-            width: z.number().int().min(16).max(7680).optional(),
-            height: z.number().int().min(16).max(7680).optional(),
-            fps: z.number().min(1).max(120).optional(),
-            bitrate: z.number().min(100000).max(100000000).optional(),
-            format: z.enum(["mp4", "webm"]).optional(),
-            audio: z.boolean().optional(),
-            allowToneMap: z.boolean().optional(),
-          })
-          .optional(),
-      }),
-    ],
-    [
-      "manage_jobs",
-      "Read export status, progress and completion metadata, or cancel an export.",
-      z.object({
-        action: z.enum(["status", "cancel"]).default("status"),
-        jobId: z.string().optional(),
-      }),
-    ],
-  ];
-  for (const [name, description, inputSchema] of tools)
-    mcp.registerTool(name, { description, inputSchema }, async (args) => {
-      try {
-        if (name === "connect_editor") {
-          const result = {
-            connected: browser?.readyState === 1,
-            url: pairingUrl,
-            instructions:
-              "Open this link in desktop Chrome or Edge, approve Connect AI agent, and allow local network access if prompted. Keep this editor tab open. Then call inspect_project. Only one tab can connect at a time.",
-          };
+  const mcp = new McpServer({
+    name: "sequence-editor",
+    version: serverVersion,
+  });
+  for (const definition of toolCatalog()) {
+    const { name, title, description, inputSchema, outputSchema } = definition;
+    mcp.registerTool(
+      name,
+      {
+        title,
+        description,
+        inputSchema: fromJsonSchema(inputSchema),
+        outputSchema: fromJsonSchema(outputSchema),
+      },
+      async (input) => {
+        let args = tools[name].input.parse(input);
+        try {
+          if (name === "connect_editor") {
+            const result = {
+              connected: browser?.readyState === 1,
+              url: pairingUrl,
+              instructions:
+                "Open this link in desktop Chrome or Edge, approve Connect AI agent, and allow local network access if prompted. Keep this editor tab open. Then call inspect_project. Only one tab can connect at a time.",
+            };
+            return {
+              content: [{ type: "text", text: JSON.stringify(result) }],
+              structuredContent: result,
+              resultType: "complete",
+            };
+          }
+          if (name === "manage_assets" && args.action === "import") {
+            const files = [];
+            for (const path of args.paths || []) {
+              const actual = await realpath(path);
+              if (
+                !allowed.some(
+                  (dir) => actual === dir || actual.startsWith(dir + sep),
+                )
+              )
+                throw new Error("File is outside --allow-media directories");
+              if ((await stat(actual)).size > 64 * 1024 * 1024)
+                throw new Error(
+                  "Use the browser file picker for files larger than 64 MiB",
+                );
+              files.push({
+                name: actual.split(sep).pop(),
+                type:
+                  extname(actual) === ".wav"
+                    ? "audio/wav"
+                    : extname(actual) === ".mp3"
+                      ? "audio/mpeg"
+                      : extname(actual) === ".png"
+                        ? "image/png"
+                        : extname(actual) === ".jpg"
+                          ? "image/jpeg"
+                          : "video/mp4",
+                data: (await readFile(actual)).toString("base64"),
+              });
+            }
+            args = { action: "import", files };
+          }
+          const result = await call(name, args);
+          if (name === "preview_frame" && result.dataUrl) {
+            const [header, data] = result.dataUrl.split(",");
+            const mimeType = header.slice(5).split(";")[0];
+            return {
+              content: [{ type: "image", mimeType, data }],
+              structuredContent: { time: result.time, mimeType },
+              resultType: "complete",
+            };
+          }
           return {
             content: [{ type: "text", text: JSON.stringify(result) }],
-            structuredContent: result,
+            structuredContent: Array.isArray(result)
+              ? { items: result }
+              : result,
             resultType: "complete",
           };
-        }
-        if (name === "manage_assets" && args.action === "import") {
-          const files = [];
-          for (const path of args.paths || []) {
-            const actual = await realpath(path);
-            if (
-              !allowed.some(
-                (dir) => actual === dir || actual.startsWith(dir + sep),
-              )
-            )
-              throw new Error("File is outside --allow-media directories");
-            if ((await stat(actual)).size > 64 * 1024 * 1024)
-              throw new Error(
-                "Use the browser file picker for files larger than 64 MiB",
-              );
-            files.push({
-              name: actual.split(sep).pop(),
-              type:
-                extname(actual) === ".wav"
-                  ? "audio/wav"
-                  : extname(actual) === ".mp3"
-                    ? "audio/mpeg"
-                    : extname(actual) === ".png"
-                      ? "image/png"
-                      : extname(actual) === ".jpg"
-                        ? "image/jpeg"
-                        : "video/mp4",
-              data: (await readFile(actual)).toString("base64"),
-            });
-          }
-          args = { ...args, files };
-        }
-        const result = await call(name, args);
-        if (name === "preview_frame" && result.dataUrl) {
-          const [header, data] = result.dataUrl.split(",");
+        } catch (e) {
           return {
-            content: [
-              { type: "image", mimeType: header.slice(5).split(";")[0], data },
-            ],
+            isError: true,
             resultType: "complete",
+            content: [{ type: "text", text: e.message }],
           };
         }
-        return {
-          content: [{ type: "text", text: JSON.stringify(result) }],
-          structuredContent: Array.isArray(result) ? { items: result } : result,
-          resultType: "complete",
-        };
-      } catch (e) {
-        return {
-          isError: true,
-          resultType: "complete",
-          content: [{ type: "text", text: e.message }],
-        };
-      }
-    });
+      },
+    );
+  }
   return mcp;
 }
 await new Promise((resolve, reject) => {

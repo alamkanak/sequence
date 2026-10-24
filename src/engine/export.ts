@@ -13,6 +13,8 @@ export type ExportState = {
   url?: string;
   seconds?: number;
   renderer?: string;
+  audioPrimingCorrectionMs?: number;
+  storage?: "OPFS" | "memory";
   settings?: ExportSettings;
 };
 let state: ExportState = {

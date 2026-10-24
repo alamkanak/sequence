@@ -2,8 +2,7 @@ import { ArrowUpRightIcon, CommandIcon } from "./icons";
 import { cn, skin } from "./ui";
 import { landing, landingAction } from "./landing-ui";
 
-export const AI_SETUP_URL =
-  "https://github.com/alamkanak/sequence#ai-editing-with-mcp";
+export const AI_SETUP_URL = `${import.meta.env.BASE_URL}docs/mcp/`;
 
 export function AiEditingSection() {
   return (
@@ -30,8 +29,6 @@ export function AiEditingSection() {
         </p>
         <a
           href={AI_SETUP_URL}
-          target="_blank"
-          rel="noopener noreferrer"
           className={cn("mt-6", landingAction("secondary"))}
         >
           Set up AI editing <ArrowUpRightIcon size={16} aria-hidden="true" />
@@ -52,10 +49,7 @@ export function AiEditingSection() {
           An edit, in your own words
         </div>
         <blockquote
-          className={cn(
-            "mt-5 rounded-xl bg-indigo-500/5 p-5",
-            landing.title,
-          )}
+          className={cn("mt-5 rounded-xl bg-indigo-500/5 p-5", landing.title)}
         >
           “Trim the opening, add a title, and fade the music out.”
         </blockquote>
