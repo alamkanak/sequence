@@ -66,7 +66,7 @@ export function McpConnection() {
         title={`MCP connection: ${labels[status]}`}
         aria-haspopup="dialog"
         onClick={() => setOpen(true)}
-        className="mx-1 h-8 gap-2 px-2"
+        className="mx-1 h-9 gap-2 px-2"
       >
         <Dot status={status} />
         <span>MCP</span>
