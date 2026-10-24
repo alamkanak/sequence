@@ -9,9 +9,9 @@ import {
   CopyIcon,
   ListIcon,
   MagnifyingGlassIcon,
-  StackSimpleIcon,
   XIcon,
 } from "../components/icons";
+import { BrandMark } from "../components/BrandMark";
 
 // Relative to this HTML entry, these also work on GitHub Pages project subpaths.
 const home = "../../";
@@ -811,11 +811,7 @@ export function Docs() {
             href={home}
             className="flex shrink-0 items-center gap-2 text-lg font-semibold tracking-tight"
           >
-            <StackSimpleIcon
-              size={25}
-              weight="fill"
-              className="text-indigo-600 [[data-theme=dark]_&]:text-indigo-400"
-            />
+            <BrandMark size={25} />
             Sequence
           </a>
           <span

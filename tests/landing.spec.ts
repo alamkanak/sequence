@@ -58,7 +58,7 @@ test("desktop navigation reaches the right sections and toolbar controls align",
     .boundingBox();
   expect(appearance!.height).toBe(editor!.height);
   expect(appearance!.y).toBe(editor!.y);
-  const favicon = page.locator('link[rel="icon"]');
+  const favicon = page.locator('link[rel="icon"][type="image/svg+xml"]');
   const response = await page.request.get(
     (await favicon.getAttribute("href"))!,
   );

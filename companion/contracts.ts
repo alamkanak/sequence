@@ -1,5 +1,8 @@
 import * as z from "zod/v4";
 import manifest from "../package.json" with { type: "json" };
+import brandIcons from "./brand-icons.json" with { type: "json" };
+
+export { brandIcons };
 
 // These runtime descriptions are the docstrings sent to MCP clients and rendered
 // in the reference. Keep meaning, units and omission behavior here, not in UI copy.
@@ -1068,6 +1071,7 @@ export function toolCatalog() {
     name,
     title: tool.title,
     description: tool.description,
+    icons: brandIcons,
     inputSchema: { ...jsonSchema(tool.input), type: "object" as const },
     outputSchema: {
       ...jsonSchema(tool.output, "output"),

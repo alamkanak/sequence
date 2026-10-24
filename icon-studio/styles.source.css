@@ -1,0 +1,37 @@
+@import "tailwindcss" source(none);
+@source "./index.html";
+@source "./studio.js";
+
+@theme {
+  --font-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+@layer base {
+  body { background: #101114; color: #eeedf4; }
+  button:not(:disabled), label[for] { cursor: pointer; }
+  button:disabled { cursor: wait; }
+  button, input, select, summary, a { outline-color: #b7a5ff; outline-offset: 4px; }
+  input[type="range"] { accent-color: #b7a5ff; cursor: pointer; width: 100%; }
+  input[type="color"] { padding: 0; border: 0; background: none; width: 28px; height: 28px; cursor: pointer; }
+  input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  input[type="color"]::-webkit-color-swatch { border: 1px solid #ffffff20; border-radius: 7px; }
+  input[type="color"]::-moz-color-swatch { border: 1px solid #ffffff20; border-radius: 7px; }
+  input[type="checkbox"] { accent-color: #b7a5ff; }
+  dialog::backdrop { background: #000a; backdrop-filter: blur(5px); }
+  [hidden] { display: none !important; }
+  ::selection { background: #b7a5ff55; }
+}
+
+@layer components {
+  .checkerboard { background-color: #202126; background-image: conic-gradient(#28292f 25%, transparent 0 50%, #28292f 0 75%, transparent 0); background-size: 20px 20px; }
+  .preview-grid { background-image: radial-gradient(#ffffff14 1px, transparent 1px); background-size: 20px 20px; }
+  .field { border: 1px solid #ffffff12; border-radius: 10px; background: #ffffff04; }
+  .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: .14em; font-weight: 650; color: #92929f; }
+  .quiet-button { border: 1px solid #ffffff18; border-radius: 8px; padding: 7px 10px; color: #c4c3cf; font-size: 12px; transition: background .15s; }
+  .quiet-button:hover { background: #ffffff0a; color: white; }
+  .concept-card { border: 1px solid #ffffff12; border-radius: 12px; background: #191a20; padding: 16px; text-align: left; transition: border-color .15s, background .15s; }
+  .concept-card:hover { border-color: #b7a5ff80; background: #202027; }
+  .concept-card[aria-pressed="true"] { border-color: #b7a5ff; background: #b7a5ff0c; }
+  .tab-button { padding: 6px 10px; font-size: 11px; border-radius: 6px; color: #a6a5b2; }
+  .tab-button[aria-pressed="true"] { color: #f4f2ff; background: #ffffff12; }
+}

@@ -13,7 +13,7 @@ import { dirname, resolve } from "node:path";
 import assert from "node:assert/strict";
 import WebSocket from "ws";
 import { createServer } from "node:http";
-import { toolCatalog } from "../companion/contracts.ts";
+import { toolCatalog, brandIcons } from "../companion/contracts.ts";
 
 const version = JSON.parse(await readFile("package.json", "utf8")).version;
 let packageSource =
@@ -130,6 +130,16 @@ try {
     clientInfo: { name: "sequence-test", version: "1" },
   });
   assert.ok(init.result, JSON.stringify(init));
+  assert.deepEqual(init.result.serverInfo.icons, brandIcons);
+  for (const icon of brandIcons) {
+    const size = icon.sizes[0].split("x")[0];
+    assert.equal(icon.mimeType, "image/png");
+    assert.deepEqual(
+      Buffer.from(icon.src.split(",")[1], "base64"),
+      await readFile(`public/brand/mcp-${size}.png`),
+      `MCP ${size}px icon differs from the project asset`,
+    );
+  }
   child.stdin.write(
     JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }) +
       "\n",
@@ -146,6 +156,7 @@ try {
       "name",
       "title",
       "description",
+      "icons",
       "inputSchema",
       "outputSchema",
     ])

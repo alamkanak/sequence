@@ -1,0 +1,17 @@
+{
+  "name": "sequence-icon-studio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Independent, offline-capable Sequence identity and icon workshop",
+  "scripts": {
+    "dev": "node serve.mjs",
+    "test": "node --test tests.mjs",
+    "build:css": "tailwindcss -i styles.source.css -o styles.css --minify",
+    "watch:css": "npm run build:css -- --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.3",
+    "tailwindcss": "4.3.3"
+  }
+}

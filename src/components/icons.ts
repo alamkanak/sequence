@@ -46,7 +46,6 @@ export { SkipForwardIcon } from "@phosphor-icons/react/dist/csr/SkipForward";
 export { SlidersHorizontalIcon } from "@phosphor-icons/react/dist/csr/SlidersHorizontal";
 export { SpeakerHighIcon } from "@phosphor-icons/react/dist/csr/SpeakerHigh";
 export { SpeakerSlashIcon } from "@phosphor-icons/react/dist/csr/SpeakerSlash";
-export { StackSimpleIcon } from "@phosphor-icons/react/dist/csr/StackSimple";
 export { SunIcon } from "@phosphor-icons/react/dist/csr/Sun";
 export { TextTIcon } from "@phosphor-icons/react/dist/csr/TextT";
 export { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";

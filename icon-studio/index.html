@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101114" />
+    <meta name="description" content="An independent workshop for the Sequence identity. Compare ten icon directions, tune colors and geometry, and export every brand asset locally." />
+    <title>Sequence — Icon Studio</title>
+    <link id="studio-favicon" rel="icon" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="./icons.js"></script>
+    <script defer src="./fonts/manrope.js"></script>
+    <script defer src="./brand.js"></script>
+    <script defer src="./export.js"></script>
+    <script defer src="./studio.js"></script>
+  </head>
+  <body class="min-w-80 font-sans text-sm antialiased">
+    <a href="#directions" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-white focus:p-3 focus:text-black">Skip to icon directions</a>
+    <header class="border-b border-white/8">
+      <div class="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-4 px-5 py-4 lg:px-8">
+        <div class="flex items-center gap-3">
+          <span id="header-mark" class="flex size-8 items-center justify-center"></span>
+          <div class="flex items-baseline gap-3"><span class="font-semibold tracking-tight">Sequence</span><span class="text-white/20">/</span><h1 class="text-sm text-zinc-400">Icon studio</h1></div>
+          <span class="ml-2 hidden rounded border border-white/10 px-1.5 py-0.5 font-mono text-[9px] tracking-wider text-zinc-500 sm:inline">LOCAL</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="save-status" class="mr-3 hidden text-[11px] text-zinc-500 md:inline">Saved on this device</span>
+          <button id="open-export" type="button" class="flex h-9 items-center gap-2 rounded-lg bg-[#c5b6ff] px-4 text-xs font-semibold text-[#201734] transition hover:bg-[#d7ccff]">
+            <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-4-4 4 4 4-4M5 15v5h14v-5"/></svg>
+            Export assets
+          </button>
+        </div>
+      </div>
+    </header>
+    <main class="mx-auto max-w-[1600px] px-5 py-7 lg:px-8 lg:py-9">
+      <div class="mb-7 flex flex-wrap items-end justify-between gap-4">
+        <div><p class="section-label mb-2 text-[#b7a5ff]">Identity workshop · 10 directions</p><h2 class="text-2xl font-medium tracking-tight sm:text-3xl">Small mark. Big sequence.</h2><p class="mt-2 text-xs leading-relaxed text-zinc-400">Pick a direction. Make it yours. Test it where it matters.</p></div>
+        <a href="#directions" class="quiet-button">Explore all 10 <span aria-hidden="true">↓</span></a>
+      </div>
+      <div class="grid items-start gap-5 lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)_280px]">
+        <aside aria-label="Icon controls" class="rounded-xl border border-white/8 bg-[#17181d] p-5">
+          <div class="mb-5 flex items-center justify-between"><h2 class="section-label">Make it yours</h2><button id="reset" type="button" class="text-[11px] text-zinc-400 hover:text-white">Reset</button></div>
+          <label for="direction" class="mb-2 block text-xs text-zinc-300">Direction</label>
+          <select id="direction" class="field mb-5 h-10 w-full px-2 text-xs text-zinc-200 [&_option]:bg-[#202127]"></select>
+          <fieldset class="border-t border-white/8 pt-5">
+            <legend class="sr-only">Colors</legend>
+            <p class="section-label mb-3">Color palette</p>
+            <div id="palettes" class="mb-4 flex gap-2" aria-label="Preset palettes"></div>
+            <div class="space-y-2.5">
+              <div class="field flex items-center gap-2 p-2"><input id="bg-color" type="color" aria-label="Tile color" /><label for="bg-hex" class="grow text-[11px] text-zinc-400">Tile</label><input id="bg-hex" maxlength="7" spellcheck="false" aria-label="Tile hex color" class="w-[68px] bg-transparent text-right font-mono text-[11px] text-zinc-300" /></div>
+              <div class="field flex items-center gap-2 p-2"><input id="fg-color" type="color" aria-label="Mark color" /><label for="fg-hex" class="grow text-[11px] text-zinc-400">Mark</label><input id="fg-hex" maxlength="7" spellcheck="false" aria-label="Mark hex color" class="w-[68px] bg-transparent text-right font-mono text-[11px] text-zinc-300" /></div>
+              <div class="field flex items-center gap-2 p-2"><input id="accent-color" type="color" aria-label="Accent color" /><label for="accent-hex" class="grow text-[11px] text-zinc-400">Accent</label><input id="accent-hex" maxlength="7" spellcheck="false" aria-label="Accent hex color" class="w-[68px] bg-transparent text-right font-mono text-[11px] text-zinc-300" /></div>
+            </div>
+            <label class="mt-4 flex items-center justify-between text-xs text-zinc-300" for="two-tone">Two-tone mark<input id="two-tone" type="checkbox" class="size-3.5" /></label>
+            <label class="mt-3 flex items-center justify-between text-xs text-zinc-300" for="transparent">Transparent tile<input id="transparent" type="checkbox" class="size-3.5" /></label>
+          </fieldset>
+          <fieldset class="mt-5 border-t border-white/8 pt-5">
+            <legend class="sr-only">Geometry</legend><p class="section-label mb-4">Geometry</p>
+            <label for="scale" class="mb-2 flex justify-between text-xs text-zinc-300">Mark size<output id="scale-value" for="scale" class="font-mono text-zinc-500"></output></label>
+            <input id="scale" type="range" min="64" max="112" step="1" />
+            <label for="radius" class="mt-4 mb-2 flex justify-between text-xs text-zinc-300">Corner radius<output id="radius-value" for="radius" class="font-mono text-zinc-500"></output></label>
+            <input id="radius" type="range" min="0" max="32" step="1" />
+            <p id="contrast" class="mt-4 text-[11px] leading-relaxed text-zinc-500"></p>
+          </fieldset>
+          <div class="mt-5 flex gap-2 border-t border-white/8 pt-5"><button id="save-recipe" type="button" class="quiet-button grow">Save recipe</button><button id="load-recipe" type="button" class="quiet-button grow">Load recipe</button><input id="recipe-file" type="file" accept="application/json,.json" hidden /></div>
+          <p class="mt-3 text-[10px] leading-relaxed text-zinc-500">Everything stays in your browser. No uploads or accounts. Brand fonts are bundled locally.</p>
+        </aside>
+        <section aria-label="Live icon preview" class="min-w-0">
+          <div class="overflow-hidden rounded-xl border border-white/8 bg-[#191a20]">
+            <div class="flex items-center justify-between border-b border-white/6 px-4 py-3"><span class="section-label">Live canvas</span><div id="canvas-tabs" class="flex gap-1 rounded-lg bg-black/20 p-1" aria-label="Canvas background"><button type="button" class="tab-button" data-canvas="dark" aria-pressed="true">Dark</button><button type="button" class="tab-button" data-canvas="light" aria-pressed="false">Light</button><button type="button" class="tab-button" data-canvas="grid" aria-pressed="false">Grid</button></div></div>
+            <div id="canvas" class="preview-grid relative flex min-h-[280px] items-center justify-center bg-[#1c1d24] py-12 sm:min-h-[330px]">
+              <span class="pointer-events-none absolute top-5 left-5 font-mono text-[9px] uppercase tracking-widest text-[#858493]">Vector master / 64 × 64</span>
+              <div id="hero-icon" class="size-44 drop-shadow-[0_22px_34px_#00000030]"></div>
+              <span id="hero-name" class="absolute right-5 bottom-5 font-mono text-[10px] text-[#858493]"></span>
+            </div>
+            <div class="flex items-center justify-between gap-3 border-t border-white/6 px-5 py-3"><span id="concept-tagline" class="text-xs text-zinc-400"></span><button id="download-svg" type="button" class="shrink-0 text-[11px] text-[#c5b6ff] hover:text-white">Save SVG <span aria-hidden="true">↗</span></button></div>
+          </div>
+          <div class="mt-4 rounded-xl border border-white/8 bg-[#17181d] p-5">
+            <div class="mb-5 flex items-center justify-between"><h3 class="section-label">The small-size test</h3><span class="font-mono text-[9px] text-zinc-500">Actual CSS pixels</span></div>
+            <div id="size-tests" class="grid grid-cols-4 gap-3"></div>
+          </div>
+          <div class="mt-4 flex items-start gap-3 rounded-xl border border-[#b7a5ff]/15 bg-[#b7a5ff]/5 p-4"><span class="pt-0.5 font-mono text-xs text-[#b7a5ff]">↳</span><p id="concept-reason" class="text-xs leading-relaxed text-zinc-400"></p></div>
+        </section>
+        <aside aria-label="Brand context previews" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+          <h2 class="section-label col-span-full xl:mt-1">In the wild</h2>
+          <section class="overflow-hidden rounded-xl border border-white/8 bg-[#17181d]"><div class="border-b border-white/8 px-4 py-2.5 text-[10px] text-zinc-500">01 / Browser tab</div><div class="bg-[#272830] p-3 pb-0"><div class="flex items-center gap-2 rounded-t-lg bg-[#17181d] px-3 py-3"><span id="browser-mark" class="size-4 shrink-0"></span><span class="truncate text-[11px] text-zinc-300">Sequence — Video editor</span><span class="ml-auto text-xs text-zinc-500">×</span></div></div><div class="h-3 bg-[#17181d]"></div></section>
+          <section class="overflow-hidden rounded-xl border border-white/8 bg-[#f7f6fb] text-[#24232b]"><div class="border-b border-black/8 px-4 py-2.5 text-[10px] text-zinc-500">02 / Landing & docs</div><div class="px-5 pt-5 pb-6"><div class="flex items-center gap-2"><span id="landing-mark" class="size-7"></span><span class="text-base font-semibold tracking-tight">Sequence</span></div><p class="mt-5 text-lg leading-snug font-semibold tracking-tight">Your story.<br />Frame by frame.</p><div class="mt-4 h-1.5 w-24 rounded-full bg-black/8"></div><div class="mt-2 h-1.5 w-36 rounded-full bg-black/5"></div></div></section>
+          <section class="overflow-hidden rounded-xl border border-white/8 bg-[#17181d]"><div class="border-b border-white/8 px-4 py-2.5 text-[10px] text-zinc-500">03 / MCP client · illustrative</div><div class="p-4"><div class="mb-3 flex items-center gap-2 text-[11px] text-zinc-500"><span class="size-1.5 rounded-full bg-emerald-400"></span>Tool call completed</div><div class="flex items-center gap-3"><span id="mcp-mark" class="size-8 shrink-0"></span><div><p class="text-xs font-medium">Sequence</p><p class="mt-1 font-mono text-[10px] text-zinc-500">apply_edits</p></div><span class="ml-auto text-xs text-zinc-500">↗</span></div><p class="mt-3 text-[10px] leading-relaxed text-zinc-500">Icon display depends on the agent client.</p></div></section>
+          <section class="overflow-hidden rounded-xl border border-white/8 bg-[#17181d]"><div class="border-b border-white/8 px-4 py-2.5 text-[10px] text-zinc-500">04 / GitHub README</div><div class="p-4"><div id="readme-wordmark" class="h-10 w-full" role="img" aria-label="Sequence wordmark"></div><div class="mt-4 border-t border-white/8 pt-3 text-[10px] text-zinc-500">Video editing with your AI agent.</div></div></section>
+        </aside>
+      </div>
+      <section aria-labelledby="brand-assets-heading" class="pt-10">
+        <div class="mb-5 flex flex-wrap items-end justify-between gap-3"><div><p class="section-label mb-2">Typography & sharing</p><h2 id="brand-assets-heading" class="text-xl font-medium tracking-tight">A considered identity. Ready to share.</h2></div><p class="text-[11px] text-zinc-500">Manrope typography · PNG exports · Light & dark</p></div>
+        <div class="grid gap-4 lg:grid-cols-2">
+          <div class="overflow-hidden rounded-xl border border-white/8"><p class="bg-[#17181d] px-4 py-2.5 text-[10px] text-zinc-500">Wordmark / light background</p><div id="wordmark-light-preview" class="flex h-32 items-center justify-center bg-[#F8F7FC] p-5" role="img" aria-label="Sequence wordmark for light backgrounds"></div></div>
+          <div class="overflow-hidden rounded-xl border border-white/8"><p class="bg-[#17181d] px-4 py-2.5 text-[10px] text-zinc-500">Wordmark / dark background</p><div id="wordmark-dark-preview" class="flex h-32 items-center justify-center bg-[#13141C] p-5" role="img" aria-label="Sequence wordmark for dark backgrounds"></div></div>
+          <div class="overflow-hidden rounded-xl border border-white/8"><p class="bg-[#17181d] px-4 py-2.5 text-[10px] text-zinc-500">Social card / primary · 1200 × 630</p><div id="social-light-preview" role="img" aria-label="Free browser video editor: edit by hand or with your AI agent. No installation, account, watermark, or uploads."></div></div>
+          <div class="overflow-hidden rounded-xl border border-white/8"><p class="bg-[#17181d] px-4 py-2.5 text-[10px] text-zinc-500">Social card / dark alternate · 1200 × 630</p><div id="social-dark-preview" role="img" aria-label="Dark social card with the same free browser editing message."></div></div>
+        </div>
+      </section>
+      <section id="directions" class="scroll-mt-6 pt-10" aria-labelledby="directions-heading">
+        <div class="mb-5 flex flex-wrap items-end justify-between gap-3"><div><p class="section-label mb-2">The contact sheet</p><h2 id="directions-heading" class="text-xl font-medium tracking-tight">Ten ways to say Sequence.</h2></div><p class="text-[11px] text-zinc-500">Explorations, ready for your pick. Every mark uses the current palette.</p></div>
+        <div id="concepts" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5"></div>
+      </section>
+      <footer class="mt-8 flex flex-wrap justify-between gap-3 border-t border-white/8 pt-5 text-[10px] leading-relaxed text-zinc-500"><span>Sequence Icon Studio · Independent HTML + Tailwind workspace</span><span>SVG · PNG · ICO · wordmarks · social · MCP metadata · recipe</span></footer>
+    </main>
+    <dialog id="export-dialog" aria-labelledby="export-title" class="fixed inset-0 m-auto max-h-[90dvh] w-[calc(100%_-_2rem)] max-w-lg overflow-y-auto rounded-2xl border border-white/12 bg-[#1b1c23] p-0 text-zinc-200 shadow-2xl">
+      <div class="flex items-start justify-between border-b border-white/8 p-6"><div><p class="section-label mb-2">One mark, every surface</p><h2 id="export-title" class="text-xl font-medium tracking-tight">Export your identity kit.</h2></div><button id="close-export" type="button" aria-label="Close export dialog" class="quiet-button">×</button></div>
+      <div class="p-6"><p id="export-summary" class="mb-5 text-xs leading-relaxed text-zinc-400"></p>
+        <ul class="space-y-4 text-xs"><li><strong class="font-medium">Browser & home screen</strong><p class="mt-1 text-zinc-500">SVG favicon, ICO (16 / 32 / 48), PNG (16–512), Apple 180, app 192 / 512, maskable 512.</p></li><li><strong class="font-medium">Landing, editor, docs & GitHub</strong><p class="mt-1 text-zinc-500">Tile and transparent SVG marks, Manrope wordmarks in transparent PNG, light / dark social cards at 1200 × 630.</p></li><li><strong class="font-medium">MCP server & tools</strong><p class="mt-1 text-zinc-500">PNG 64 / 128, embedded data URI JSON and a ready-to-import JavaScript module. No remote image host.</p></li><li><strong class="font-medium">Source & handoff</strong><p class="mt-1 text-zinc-500">Recipe JSON, asset manifest, and integration instructions tailored to Sequence.</p></li></ul>
+        <p class="mt-5 rounded-lg border border-white/8 bg-black/15 p-3 text-[11px] leading-relaxed text-zinc-400">The ZIP mirrors the project’s <code>public/</code> and <code>companion/</code> folders. The project shares these assets across its branding and MCP package. Follow INTEGRATION.md when copying the files.</p>
+        <button id="export-zip" type="button" class="mt-5 flex h-11 w-full items-center justify-center rounded-lg bg-[#c5b6ff] text-sm font-semibold text-[#201734] hover:bg-[#d7ccff] disabled:opacity-60">Download asset kit (.zip)</button>
+        <p id="export-progress" role="status" class="mt-3 min-h-4 text-center text-[11px] text-zinc-400"></p>
+      </div>
+    </dialog>
+    <div id="notice" role="status" hidden class="fixed right-5 bottom-5 z-50 flex max-w-sm items-start gap-4 rounded-xl border border-white/15 bg-[#272831] p-4 text-xs leading-relaxed text-zinc-200 shadow-xl"><span id="notice-text"></span><button id="dismiss-notice" type="button" aria-label="Dismiss notification" class="text-zinc-400 hover:text-white">×</button></div>
+    <noscript><p class="p-8">Enable JavaScript to use the icon studio. All rendering and exporting happen locally.</p></noscript>
+  </body>
+</html>

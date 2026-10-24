@@ -1,0 +1,272 @@
+{
+  "generator": "Sequence Icon Studio 2",
+  "typography": {
+    "family": "Manrope",
+    "format": "PNG"
+  },
+  "socialCopy": {
+    "headline": [
+      "Your browser.",
+      "Your video studio."
+    ],
+    "subheading": "Edit by hand or with your AI agent.",
+    "price": "100% free",
+    "benefits": [
+      "No installation",
+      "No account",
+      "No watermark",
+      "No uploads"
+    ]
+  },
+  "concept": "Edit brackets",
+  "generatedAt": "2026-10-24T03:28:39.712Z",
+  "recipe": {
+    "version": 1,
+    "concept": "edit-brackets",
+    "bg": "#635BFF",
+    "fg": "#FFFFFF",
+    "accent": "#BDB8FF",
+    "twoTone": false,
+    "transparent": false,
+    "scale": 100,
+    "radius": 16,
+    "canvas": "dark"
+  },
+  "files": [
+    {
+      "path": "public/favicon.svg",
+      "purpose": "Browser favicon, scalable"
+    },
+    {
+      "path": "public/brand/mark.svg",
+      "purpose": "Primary mark, selected tile setting"
+    },
+    {
+      "path": "public/brand/mark-transparent.svg",
+      "purpose": "Transparent mark in selected colors"
+    },
+    {
+      "path": "public/brand/mark-on-light.svg",
+      "purpose": "Transparent dark mark for light backgrounds"
+    },
+    {
+      "path": "public/brand/mark-on-dark.svg",
+      "purpose": "Transparent light mark for dark backgrounds"
+    },
+    {
+      "path": "public/brand/icon-16.png",
+      "purpose": "General-purpose raster mark",
+      "dimensions": {
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "path": "public/brand/icon-24.png",
+      "purpose": "General-purpose raster mark",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      }
+    },
+    {
+      "path": "public/brand/icon-32.png",
+      "purpose": "General-purpose raster mark",
+      "dimensions": {
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "path": "public/brand/icon-48.png",
+      "purpose": "General-purpose raster mark",
+      "dimensions": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "path": "public/brand/icon-64.png",
+      "purpose": "General-purpose raster mark",
+      "dimensions": {
+        "width": 64,
+        "height": 64
+      }
+    },
+    {
+      "path": "public/brand/icon-128.png",
+      "purpose": "General-purpose raster mark",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "path": "public/brand/icon-180.png",
+      "purpose": "General-purpose raster mark",
+      "dimensions": {
+        "width": 180,
+        "height": 180
+      }
+    },
+    {
+      "path": "public/brand/icon-192.png",
+      "purpose": "General-purpose raster mark",
+      "dimensions": {
+        "width": 192,
+        "height": 192
+      }
+    },
+    {
+      "path": "public/brand/icon-256.png",
+      "purpose": "General-purpose raster mark",
+      "dimensions": {
+        "width": 256,
+        "height": 256
+      }
+    },
+    {
+      "path": "public/brand/icon-512.png",
+      "purpose": "General-purpose raster mark",
+      "dimensions": {
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "path": "public/brand/icon-1024.png",
+      "purpose": "General-purpose raster mark",
+      "dimensions": {
+        "width": 1024,
+        "height": 1024
+      }
+    },
+    {
+      "path": "public/favicon-16.png",
+      "purpose": "Browser PNG favicon",
+      "dimensions": {
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "path": "public/favicon-32.png",
+      "purpose": "Browser PNG favicon fallback",
+      "dimensions": {
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "path": "public/favicon.ico",
+      "purpose": "Multi-image browser ICO",
+      "dimensions": {
+        "sizes": [
+          16,
+          32,
+          48
+        ]
+      }
+    },
+    {
+      "path": "public/apple-touch-icon.png",
+      "purpose": "Opaque Apple home-screen icon",
+      "dimensions": {
+        "width": 180,
+        "height": 180
+      }
+    },
+    {
+      "path": "public/brand/app-192.png",
+      "purpose": "Opaque web app icon",
+      "dimensions": {
+        "width": 192,
+        "height": 192
+      }
+    },
+    {
+      "path": "public/brand/app-512.png",
+      "purpose": "Opaque web app icon",
+      "dimensions": {
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "path": "public/brand/maskable-512.png",
+      "purpose": "Full-bleed app icon with safe symbol",
+      "dimensions": {
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "path": "public/brand/wordmark-light.png",
+      "purpose": "Transparent Manrope wordmark for light backgrounds",
+      "dimensions": {
+        "width": 866,
+        "height": 170
+      }
+    },
+    {
+      "path": "public/brand/wordmark-dark.png",
+      "purpose": "Transparent Manrope wordmark for dark backgrounds",
+      "dimensions": {
+        "width": 866,
+        "height": 170
+      }
+    },
+    {
+      "path": "public/brand/social-card.png",
+      "purpose": "Primary social card: free browser editing, by hand or with an AI agent",
+      "dimensions": {
+        "width": 1200,
+        "height": 630
+      }
+    },
+    {
+      "path": "public/brand/social-card-dark.png",
+      "purpose": "Dark social card alternate",
+      "dimensions": {
+        "width": 1200,
+        "height": 630
+      }
+    },
+    {
+      "path": "public/brand/mcp-64.png",
+      "purpose": "Opaque portable MCP icon",
+      "dimensions": {
+        "width": 64,
+        "height": 64
+      }
+    },
+    {
+      "path": "public/brand/mcp-128.png",
+      "purpose": "Opaque portable MCP icon",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "path": "companion/brand-icons.mjs",
+      "purpose": "Self-contained MCP icon metadata module"
+    },
+    {
+      "path": "companion/brand-icons.json",
+      "purpose": "Portable MCP icons metadata"
+    },
+    {
+      "path": "public/site.webmanifest",
+      "purpose": "Deployment-relative app manifest"
+    },
+    {
+      "path": "public/brand/recipe.json",
+      "purpose": "Editable studio settings"
+    },
+    {
+      "path": "INTEGRATION.md",
+      "purpose": "Project-specific integration guide"
+    }
+  ]
+}

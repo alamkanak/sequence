@@ -1,8 +1,9 @@
-# Sequence
+<h1 align="left"><picture><source media="(prefers-color-scheme: dark)" srcset="public/brand/wordmark-dark.png" /><img src="public/brand/wordmark-light.png" alt="Sequence" width="340" /></picture></h1>
 
-A browser video editor for you and your AI agent. Edit by hand or let
-**Claude Code, Codex, Cursor, and other MCP-compatible agents** work on your
-timeline through the built-in **MCP server**. Preview and render on your device.
+Free video editing in your browser, by hand or with your AI agent.
+No installation, account, watermark, or uploads. Connect **Claude Code, Codex,
+Cursor, or another MCP-compatible agent** to edit your timeline through the
+built-in **MCP server**. Preview and render on your device.
 
 **[Open Sequence](https://alamkanak.github.io/sequence/)** · **[MCP documentation](https://alamkanak.github.io/sequence/docs/mcp/)** · **[Set up AI editing](#ai-editing-with-mcp)**
 
@@ -38,7 +39,7 @@ local server to your AI app's MCP settings (Claude Desktop/Cursor format):
   "mcpServers": {
     "sequence": {
       "command": "npx",
-      "args": ["--yes", "https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.2.0.tgz"]
+      "args": ["--yes", "https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.2.1.tgz"]
     }
   }
 }
@@ -128,6 +129,12 @@ schemas. For agent file imports, append `"--allow-media", "/absolute/media/path"
 to `args`, or `"--allow-media-anywhere"` to allow any readable directory. Binary
 transfers have no fixed file-size limit. The editor toolbar shows live MCP status;
 click it for client details, media permissions, activity, and a disconnect action.
+
+The independent [Icon Studio](icon-studio/README.md) runs with `cd icon-studio &&
+npm run dev` at `http://127.0.0.1:5180/`. Edit brackets is the selected identity.
+To update it, copy the exported `public/` assets and `companion/brand-icons.json`
+into the project. The landing page, editor, docs, README, favicon, and MCP metadata
+share these assets; the build includes the icons in the standalone MCP package.
 
 Performance measurements and benchmark instructions: [BENCHMARK.md](BENCHMARK.md).
 

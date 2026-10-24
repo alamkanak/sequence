@@ -23,10 +23,18 @@ export default defineConfig({
           res.end(
             JSON.stringify(
               docsCatalog().tools.map(
-                ({ name, title, description, inputSchema, outputSchema }) => ({
+                ({
                   name,
                   title,
                   description,
+                  icons,
+                  inputSchema,
+                  outputSchema,
+                }) => ({
+                  name,
+                  title,
+                  description,
+                  icons,
                   inputSchema,
                   outputSchema,
                 }),
@@ -44,10 +52,18 @@ export default defineConfig({
           source:
             JSON.stringify(
               docsCatalog().tools.map(
-                ({ name, title, description, inputSchema, outputSchema }) => ({
+                ({
                   name,
                   title,
                   description,
+                  icons,
+                  inputSchema,
+                  outputSchema,
+                }) => ({
+                  name,
+                  title,
+                  description,
+                  icons,
                   inputSchema,
                   outputSchema,
                 }),

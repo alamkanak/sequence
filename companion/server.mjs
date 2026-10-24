@@ -8,7 +8,7 @@ import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { WebSocketServer } from "ws";
 import { McpServer, fromJsonSchema } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
-import { tools, toolCatalog, serverVersion } from "./contracts.ts";
+import { tools, toolCatalog, serverVersion, brandIcons } from "./contracts.ts";
 import { createMediaTransfers } from "./media.mjs";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "dist");
 const port = Number(process.env.SEQUENCE_PORT || 0);
@@ -226,14 +226,17 @@ function buildServer() {
   const mcp = new McpServer({
     name: "sequence-editor",
     version: serverVersion,
+    icons: brandIcons,
   });
   for (const definition of toolCatalog()) {
-    const { name, title, description, inputSchema, outputSchema } = definition;
+    const { name, title, description, icons, inputSchema, outputSchema } =
+      definition;
     mcp.registerTool(
       name,
       {
         title,
         description,
+        icons,
         inputSchema: fromJsonSchema(inputSchema),
         outputSchema: fromJsonSchema(outputSchema),
       },

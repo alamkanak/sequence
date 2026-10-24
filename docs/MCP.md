@@ -12,7 +12,7 @@ For an app with a server form, choose **local / stdio**, command `npx`, and argu
 
 ```text
 --yes
-https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.2.0.tgz
+https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.2.1.tgz
 ```
 
 Each line is a separate argument. The AI app starts the process; do not also
@@ -27,7 +27,7 @@ VS Code uses a different JSON wrapper:
     "sequence": {
       "type": "stdio",
       "command": "npx",
-      "args": ["--yes", "https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.2.0.tgz"]
+      "args": ["--yes", "https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.2.1.tgz"]
     }
   }
 }

@@ -8,7 +8,6 @@ import {
   useState,
 } from "react";
 import {
-  StackSimpleIcon,
   CaretDownIcon,
   ArrowUpRightIcon,
   ArrowCounterClockwiseIcon,
@@ -23,6 +22,7 @@ import {
   MagnifyingGlassIcon,
 } from "./icons";
 import { store, useStore } from "../core/store";
+import { BrandMark } from "./BrandMark";
 import { emptyProject, validateProject } from "../core/model";
 import { transport } from "../engine/transport";
 import { download } from "../core/storage";
@@ -294,11 +294,7 @@ export function Editor() {
             aria-label="Sequence home"
             className="flex items-center gap-2 text-sm font-semibold tracking-tight"
           >
-            <StackSimpleIcon
-              size={22}
-              weight="fill"
-              className="text-indigo-600 [[data-theme=dark]_&]:text-indigo-400"
-            />
+            <BrandMark size={22} />
             Sequence
           </a>
           <span className={cn("h-4 border-l", skin.border)} />

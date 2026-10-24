@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  StackSimpleIcon,
   ArrowRightIcon,
   ArrowUpRightIcon,
   PlayIcon,
@@ -18,6 +17,7 @@ import { loadDemo } from "../core/actions";
 import { ThemePicker, cn, skin } from "./ui";
 import { AiEditingSection, AI_SETUP_URL } from "./AiEditingSection";
 import { landing, landingAction } from "./landing-ui";
+import { BrandMark } from "./BrandMark";
 
 const asset = (name: string) => `${import.meta.env.BASE_URL}demo/${name}`;
 
@@ -39,7 +39,7 @@ function ProductPreview() {
         )}
       >
         <div className="flex items-center gap-2 font-medium">
-          <StackSimpleIcon size={18} weight="fill" />
+          <BrandMark size={18} />
           <span>Sequence</span>
           <span className={cn("ml-4 hidden font-normal sm:block", skin.muted)}>
             A quieter kind of motion
@@ -216,11 +216,7 @@ export function Landing() {
             aria-label="Sequence home"
             className="mr-auto flex w-fit items-center gap-2 text-lg font-semibold tracking-tight sm:text-xl"
           >
-            <StackSimpleIcon
-              size={28}
-              weight="fill"
-              className="size-6 text-indigo-600 sm:size-7 [[data-theme=dark]_&]:text-indigo-400"
-            />
+            <BrandMark size={28} className="size-6 sm:size-7" />
             Sequence
           </a>
           <nav
@@ -533,7 +529,7 @@ export function Landing() {
             href="#/"
             className="flex w-fit items-center gap-2 text-sm font-semibold"
           >
-            <StackSimpleIcon size={20} weight="fill" aria-hidden="true" />
+            <BrandMark size={20} />
             Sequence
           </a>
           <p className={landing.note}>Made for making. Locally.</p>

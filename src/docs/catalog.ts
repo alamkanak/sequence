@@ -26,6 +26,7 @@ export interface DocTool {
   name: string;
   title: string;
   description: string;
+  icons: { src: string; mimeType: string; sizes: string[] }[];
   category: string;
   inputSchema: Schema;
   outputSchema: Schema;

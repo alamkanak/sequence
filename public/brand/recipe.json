@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "concept": "edit-brackets",
+  "bg": "#635BFF",
+  "fg": "#FFFFFF",
+  "accent": "#BDB8FF",
+  "twoTone": false,
+  "transparent": false,
+  "scale": 100,
+  "radius": 16,
+  "canvas": "dark"
+}
