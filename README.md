@@ -1,15 +1,18 @@
 <h1 align="left"><picture><source media="(prefers-color-scheme: dark)" srcset="public/brand/wordmark-dark.png" /><img src="public/brand/wordmark-light.png" alt="Sequence" width="340" /></picture></h1>
 
-Free video editing in your browser, by hand or with your AI agent.
-No installation, account, watermark, or uploads. Connect **Claude Code, Codex,
-Cursor, or another MCP-compatible agent** to edit your timeline through the
-built-in **MCP server**. Preview and render on your device.
+**Sequence is a free, open-source online video editor with no watermark.**
+Edit videos in your browser without signing up, installing an app, or uploading
+your media. Trim clips, add text and music, and export on your own device.
+
+Edit by hand or connect **Claude Code, Codex, Cursor, or another AI agent** through
+the built-in **MCP server**. Agent changes appear in the same multitrack timeline,
+where you can review, adjust, or undo them.
 
 **[Open Sequence](https://alamkanak.github.io/sequence/)** · **[MCP documentation](https://alamkanak.github.io/sequence/docs/mcp/)** · **[Set up AI editing](#ai-editing-with-mcp)**
 
 ![Sequence video editor with a multitrack timeline and preview](docs/images/screenshot.png)
 
-## What you can do
+## Browser video editing features
 
 - Ask Claude Code or Codex to edit your project through MCP.
 - Import video, audio, and images by browsing, dropping files, or pasting from the clipboard.
@@ -23,6 +26,15 @@ Press **⌘K / Ctrl+K** to search actions, navigate to media or segments, and ju
 to settings for your selection. **⌘I / Ctrl+I** opens import options; **⌘V / Ctrl+V**
 pastes media or a copied timeline segment. Clipboard support depends on the browser;
 if the Paste button cannot read it, use the keyboard shortcut or browse files.
+
+## Edit a video online in three steps
+
+1. [Open the free browser editor](https://alamkanak.github.io/sequence/#/editor)
+   in desktop Chrome or Edge and import your local videos, images, or audio.
+2. Trim, split, and arrange clips. Add titles, shapes, transitions, and music,
+   or connect an AI agent to help edit your timeline.
+3. Preview and export MP4 or WebM when supported by your browser. No watermark
+   is added, and rendering happens on your device.
 
 ## AI editing with MCP
 
@@ -135,6 +147,8 @@ npm run dev` at `http://127.0.0.1:5180/`. Edit brackets is the selected identity
 To update it, copy the exported `public/` assets and `companion/brand-icons.json`
 into the project. The landing page, editor, docs, README, favicon, and MCP metadata
 share these assets; the build includes the icons in the standalone MCP package.
+
+Search targeting, indexing setup, and research sources: [SEO.md](docs/SEO.md).
 
 Performance measurements and benchmark instructions: [BENCHMARK.md](BENCHMARK.md).
 

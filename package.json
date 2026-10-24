@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc -b && vite build && npm run build:mcp",
+    "build": "tsc -b && vite build && npm run build:seo && npm run build:mcp",
     "build:mcp": "node scripts/package-mcp.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
@@ -16,7 +16,9 @@
     "check": "tsc --noEmit && node scripts/check-ui.mjs",
     "test:mcp": "node scripts/test-mcp.mjs && node scripts/test-mcp.mjs --anywhere",
     "test:mcp:package": "node scripts/test-mcp.mjs --package && node scripts/test-mcp.mjs --package --anywhere",
-    "format": "prettier --write src tests companion scripts *.ts"
+    "format": "prettier --write src tests companion scripts *.ts",
+    "build:seo": "node scripts/prerender.mjs && npm run test:seo",
+    "test:seo": "node scripts/test-seo.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.3.1",

@@ -13,11 +13,11 @@ import {
   ListIcon,
   XIcon,
 } from "./icons";
-import { loadDemo } from "../core/actions";
 import { ThemePicker, cn, skin } from "./ui";
 import { AiEditingSection, AI_SETUP_URL } from "./AiEditingSection";
 import { landing, landingAction } from "./landing-ui";
 import { BrandMark } from "./BrandMark";
+import { LandingFaq } from "./LandingFaq";
 
 const asset = (name: string) => `${import.meta.env.BASE_URL}demo/${name}`;
 
@@ -175,17 +175,17 @@ function ProductPreview() {
   );
 }
 
-export function Landing() {
+export function Landing({ loadSample }: { loadSample?: () => Promise<void> }) {
   const [loading, setLoading] = useState(false);
   const [demoError, setDemoError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   async function demo() {
-    if (loading) return;
+    if (loading || !loadSample) return;
     setLoading(true);
     setDemoError(null);
     try {
-      await loadDemo();
+      await loadSample();
       location.hash = "/editor";
     } catch {
       setDemoError(
@@ -239,6 +239,7 @@ export function Landing() {
                 ["#features", "Features"],
                 ["#ai-editing", "AI editing"],
                 ["#privacy", "Privacy"],
+                ["#faq", "FAQ"],
                 [`${import.meta.env.BASE_URL}docs/mcp/`, "Docs"],
               ].map(([href, label]) => (
                 <a
@@ -303,21 +304,21 @@ export function Landing() {
               className="size-1.5 rounded-full bg-indigo-500"
               aria-hidden="true"
             />
-            Local video editing. AI ready.
+            Free browser video editing. AI ready.
           </p>
           <h1
             id="hero-heading"
             className="text-[2.75rem] leading-[1.08] font-semibold tracking-[-0.045em] text-balance sm:text-6xl lg:text-7xl"
           >
-            Make room for
+            Free online video editor.
             <br />
             <span className="text-indigo-600 [[data-theme=dark]_&]:text-indigo-400">
-              your next story.
+              No watermark.
             </span>
           </h1>
           <p className={cn("mx-auto mt-6 max-w-2xl text-pretty", landing.body)}>
-            A focused video editor, right in your browser. Shape your story by
-            hand or with your AI agent, and render it on your own device.
+            Edit videos in your browser, by hand or with Claude Code, Codex, or
+            another AI agent. No installation, account, or media uploads.
           </p>
           <div className="mx-auto mt-8 flex max-w-sm flex-col items-stretch justify-center gap-3 sm:max-w-none sm:flex-row sm:items-center">
             <a href="#/editor" className={landingAction()}>
@@ -349,14 +350,17 @@ export function Landing() {
               landing.note,
             )}
           >
-            {["No sign-up", "No media uploads", "Free & open source"].map(
-              (text) => (
-                <li key={text} className="flex items-center gap-1.5">
-                  <CheckCircleIcon size={16} aria-hidden="true" />
-                  {text}
-                </li>
-              ),
-            )}
+            {[
+              "No installation",
+              "No account",
+              "No uploads",
+              "Free & open source",
+            ].map((text) => (
+              <li key={text} className="flex items-center gap-1.5">
+                <CheckCircleIcon size={16} aria-hidden="true" />
+                {text}
+              </li>
+            ))}
           </ul>
         </section>
 
@@ -375,7 +379,7 @@ export function Landing() {
           <div className="max-w-2xl">
             <p className={landing.eyebrow}>The editor</p>
             <h2 id="features-heading" className={cn("mt-3", landing.heading)}>
-              Everything your story needs.
+              Trim, split, and edit video in your browser.
             </h2>
             <p className={cn("mt-4", landing.body)}>
               A clear timeline, precise controls, and space to focus on the
@@ -386,12 +390,12 @@ export function Landing() {
             {[
               {
                 Icon: FilmStripIcon,
-                title: "Every layer, in its place.",
+                title: "Multitrack video editing.",
                 text: "Arrange footage, music, titles, and shapes on a multitrack timeline. Snap, split, and trim with precision.",
               },
               {
                 Icon: LightningIcon,
-                title: "Keep your ideas moving.",
+                title: "Preview as you edit.",
                 text: "Preview your composition as you work, with browser-native decoding and GPU compositing.",
               },
               {
@@ -474,7 +478,7 @@ export function Landing() {
           <div>
             <p className={landing.eyebrow}>Local by design</p>
             <h2 id="privacy-heading" className={cn("mt-3", landing.heading)}>
-              Your files. Your workspace.
+              A video editor without uploads.
             </h2>
             <p className={cn("mt-4 max-w-md", landing.body)}>
               Editing shouldn’t start with an upload. Sequence previews and
@@ -499,6 +503,8 @@ export function Landing() {
           </div>
         </section>
 
+        <LandingFaq />
+
         <section
           aria-labelledby="start-heading"
           className={cn(
@@ -508,7 +514,7 @@ export function Landing() {
           )}
         >
           <h2 id="start-heading" className={landing.heading}>
-            The next frame is yours.
+            Start editing videos online for free.
           </h2>
           <p className={cn("mx-auto mt-4 max-w-lg", landing.body)}>
             Open a workspace and start putting your story together.

@@ -18,14 +18,13 @@ export function AiEditingSection() {
       <div>
         <p className={landing.eyebrow}>AI editing</p>
         <h2 id="ai-heading" className={cn("mt-3", landing.heading)}>
-          Your timeline.
-          <br />
-          Your AI collaborator.
+          AI video editing with MCP.
         </h2>
         <p className={cn("mt-4 max-w-lg", landing.body)}>
-          Work with Claude Code, Codex, Cursor, or another MCP-compatible agent.
-          Ask it to arrange clips, trim footage, add titles, or adjust audio.
-          Review every change in the same timeline you use by hand.
+          Connect Claude Code, Codex, Cursor, or another AI agent through the
+          Model Context Protocol (MCP). Ask it to arrange clips, trim footage,
+          add titles, or adjust audio. Review every change in the same timeline
+          you use by hand.
         </p>
         <a
           href={AI_SETUP_URL}

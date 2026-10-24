@@ -12,6 +12,7 @@ import {
   XIcon,
 } from "../components/icons";
 import { BrandMark } from "../components/BrandMark";
+import { searchPages } from "../../seo.config";
 
 // Relative to this HTML entry, these also work on GitHub Pages project subpaths.
 const home = "../../";
@@ -536,12 +537,12 @@ function Guide({ workflow }: { workflow: boolean }) {
       <h1 className="mt-4 text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
         {workflow
           ? "From connection to final cut."
-          : "Your editor. Your agent."}
+          : "MCP video editor setup and tool reference."}
       </h1>
       <p className={cn("mt-5 text-base leading-8", skin.muted)}>
         {workflow
           ? "A reliable editing workflow starts with inspection and ends with a preview. Every change stays visible in the same timeline you use by hand."
-          : "Connect your AI app to Sequence, then edit your timeline in plain language. Explore the tools, their exact parameters, and examples generated from the server’s own definitions."}
+          : "Connect Claude Code, Codex, Cursor, or another AI agent to Sequence’s free browser video editor through MCP. Explore the tools, their exact parameters, and examples generated from the server’s own definitions."}
       </p>
       <Note>
         Requires Node.js 24+, a local MCP client, and desktop Chrome or Edge.
@@ -727,7 +728,11 @@ function Guide({ workflow }: { workflow: boolean }) {
 }
 
 export function Docs() {
-  const [hash, setHash] = useState(location.hash.slice(1) || "getting-started");
+  const [hash, setHash] = useState(() =>
+    typeof location === "undefined"
+      ? "getting-started"
+      : location.hash.slice(1) || "getting-started",
+  );
   const [query, setQuery] = useState("");
   const [menu, setMenu] = useState(false);
   const [format, setFormat] = useState("reference");
@@ -767,7 +772,10 @@ export function Docs() {
     };
   }, []);
   useEffect(() => {
-    document.title = `${tool?.title ?? (page === "workflow" ? "Editing workflow" : "Getting started")} — Sequence MCP`;
+    document.title =
+      page === "getting-started"
+        ? searchPages.docs.title
+        : `${tool?.title ?? "Editing workflow"} — Sequence MCP`;
     const section = hash.split("--")[1];
     if (section)
       document.getElementById(section)?.scrollIntoView({ behavior: "instant" });

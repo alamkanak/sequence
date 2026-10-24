@@ -13,7 +13,7 @@ test("landing links to the integrated docs and exposes the same MCP definitions"
     .click();
   await expect(page).toHaveURL(/\/docs\/mcp\/$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Your editor. Your agent.",
+    "MCP video editor setup and tool reference.",
   );
   const download = await page.request.get("/docs/mcp/tools.json");
   expect(download.ok()).toBe(true);
@@ -107,7 +107,7 @@ test("built docs and links work under a GitHub Pages project subpath", async ({
     .click();
   await expect(page).toHaveURL(`${origin}/sequence/docs/mcp/`);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Your editor. Your agent.",
+    "MCP video editor setup and tool reference.",
   );
   expect(errors).toEqual([]);
 });
