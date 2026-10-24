@@ -1,5 +1,143 @@
 import { test, expect } from "@playwright/test";
 import { extname, resolve } from "node:path";
+import { mcpClients } from "../src/docs/client-configs";
+
+test("client setup tabs show the right file, source, and scoped configuration", async ({
+  page,
+}) => {
+  await page.goto("/docs/mcp/");
+  await expect(
+    page.getByRole("tab", { name: "Codex", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  const panel = page.locator("#client-setup-panel");
+  await expect(panel.locator("pre")).toContainText("[mcp_servers.sequence]");
+  await panel
+    .getByRole("textbox", { name: "Allowed folders" })
+    .fill("/Users/test/My Clips\n/Users/test/Music");
+  for (const client of mcpClients) {
+    await page.getByRole("tab", { name: client.name, exact: true }).click();
+    await expect(page).toHaveURL(
+      new RegExp(`#getting-started/${client.id}--installation$`),
+    );
+    await expect(panel.getByRole("heading")).toHaveText(
+      `Set up ${client.name}`,
+    );
+    await expect(
+      panel.getByRole("link", { name: "Official setup guide" }),
+    ).toHaveAttribute("href", client.source);
+    await expect(
+      panel.getByRole("button", { name: `Copy ${client.file}`, exact: true }),
+    ).toBeVisible();
+    await expect(panel.locator("pre")).toContainText("/Users/test/My Clips");
+    await expect(panel.locator("pre")).toContainText("/Users/test/Music");
+    await expect(panel.locator("pre")).toContainText('"--allow-media"');
+  }
+  await page.reload();
+  await expect(
+    page.getByRole("tab", { name: "Claude Desktop", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(panel.getByRole("heading")).toHaveText("Set up Claude Desktop");
+});
+
+test("media access and Windows settings change the configuration that is copied", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/docs/mcp/");
+  const panel = page.locator("#client-setup-panel");
+  const code = panel.locator("pre");
+  const copy = panel.getByRole("button", {
+    name: "Copy .codex/config.toml",
+    exact: true,
+  });
+  await panel
+    .getByRole("textbox", { name: "Allowed folders" })
+    .fill("/Users/test/My Clips");
+  await copy.click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    await code.textContent(),
+  );
+  await expect(copy).toHaveText("Copied");
+  await panel.getByRole("radio", { name: /^Any directory/ }).check();
+  await expect(code).toContainText('"--allow-media-anywhere"');
+  await expect(code).not.toContainText('"--allow-media"');
+  await expect(code).not.toContainText("/Users/test/My Clips");
+  await expect(copy).toHaveText("Copy");
+  await copy.click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    await code.textContent(),
+  );
+  await panel.getByRole("radio", { name: /^Browser imports only/ }).check();
+  await expect(code).not.toContainText("--allow-media");
+  await panel.getByRole("radio", { name: /^Specific folders/ }).check();
+  await expect(code).toContainText("/Users/test/My Clips");
+  await panel
+    .getByRole("combobox", { name: "Operating system" })
+    .selectOption("windows");
+  await panel
+    .getByRole("textbox", { name: "Allowed folders" })
+    .fill("C:\\Users\\test\\My Videos");
+  await expect(code).toContainText('command = "cmd"');
+  await expect(code).toContainText('"/c"');
+  await expect(code).toContainText('"C:\\\\Users\\\\test\\\\My Videos"');
+  await page.getByRole("tab", { name: "OpenCode", exact: true }).click();
+  await expect(code).toContainText('"mcp"');
+  const config = JSON.parse((await code.textContent())!);
+  expect(config.mcp.sequence.command.slice(0, 4)).toEqual([
+    "cmd",
+    "/c",
+    "npx",
+    "--yes",
+  ]);
+  expect(config.mcp.sequence.command.slice(-2)).toEqual([
+    "--allow-media",
+    "C:\\Users\\test\\My Videos",
+  ]);
+});
+
+test("setup tabs support keyboard navigation and fit mobile in both themes", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/docs/mcp/#getting-started/codex--installation");
+  await page.getByRole("tab", { name: "Codex", exact: true }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(
+    page.getByRole("tab", { name: "Claude Code", exact: true }),
+  ).toBeFocused();
+  await expect(
+    page.getByRole("tab", { name: "Claude Code", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("End");
+  await expect(
+    page.getByRole("tab", { name: "Claude Desktop", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Home");
+  await expect(
+    page.getByRole("tab", { name: "Codex", exact: true }),
+  ).toBeFocused();
+  for (const theme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme: theme });
+    for (const width of [320, 375, 768, 1440]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.goto("/docs/mcp/#getting-started/codex--installation");
+      await expect(page.locator("#client-setup-panel")).toBeVisible();
+      expect(
+        await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth <=
+            document.documentElement.clientWidth,
+        ),
+      ).toBe(true);
+      if (width === 375 || width === 1440) {
+        await page.screenshot({
+          path: testInfo.outputPath(`setup-${theme}-${width}.png`),
+          fullPage: true,
+        });
+      }
+    }
+  }
+});
 
 test("landing links to the integrated docs and exposes the same MCP definitions", async ({
   page,

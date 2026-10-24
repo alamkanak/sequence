@@ -5,80 +5,22 @@ import { ThemePicker, cn, skin } from "../components/ui";
 import {
   ArrowRightIcon,
   ArrowUpRightIcon,
-  CheckIcon,
-  CopyIcon,
   ListIcon,
   MagnifyingGlassIcon,
   XIcon,
 } from "../components/icons";
 import { BrandMark } from "../components/BrandMark";
 import { searchPages, site } from "../../seo.config";
+import { Code } from "./Code";
+import { ClientSetup } from "./ClientSetup";
+import type { McpClientId } from "./client-configs";
 
 // Relative to this HTML entry, these also work on GitHub Pages project subpaths.
 const home = "../../";
-const installUrl = `https://alamkanak.github.io/sequence/mcp/sequence-mcp-${catalog.version}.tgz`;
-const install = JSON.stringify(
-  { mcpServers: { sequence: { command: "npx", args: ["--yes", installUrl] } } },
-  null,
-  2,
-);
 const sectionClass = "scroll-mt-28 border-t pt-9 mt-10";
 const headingClass = "text-xl font-semibold tracking-tight";
 const linkClass =
   "text-indigo-600 underline decoration-indigo-500/30 underline-offset-4 hover:decoration-indigo-500 [[data-theme=dark]_&]:text-indigo-300";
-
-function Code({ value, label = "JSON" }: { value: string; label?: string }) {
-  const [status, setStatus] = useState("Copy");
-  useEffect(() => {
-    setStatus("Copy");
-  }, [value]);
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(value);
-      setStatus("Copied");
-    } catch {
-      setStatus("Select the code to copy");
-    }
-  }
-  return (
-    <div
-      className={cn(
-        "my-5 min-w-0 overflow-hidden rounded-xl border",
-        skin.border,
-        skin.panel,
-      )}
-    >
-      <div
-        className={cn(
-          "flex min-h-11 items-center justify-between gap-2 border-b px-4 text-xs",
-          skin.border,
-          skin.muted,
-        )}
-      >
-        <span className="font-mono">{label}</span>
-        <button
-          type="button"
-          onClick={() => void copy()}
-          aria-label={`Copy ${label}`}
-          className="flex min-h-9 items-center gap-2 rounded px-2 hover:text-indigo-500"
-        >
-          {status === "Copied" ? (
-            <CheckIcon size={14} />
-          ) : (
-            <CopyIcon size={14} />
-          )}
-          <span aria-live="polite">{status}</span>
-        </button>
-      </div>
-      <pre
-        tabIndex={0}
-        className="max-h-[34rem] overflow-auto p-5 text-xs leading-7 text-zinc-700 sm:text-sm [[data-theme=dark]_&]:text-zinc-300"
-      >
-        <code>{value}</code>
-      </pre>
-    </div>
-  );
-}
 
 function schemaType(schema: Schema): string {
   if (schema.const !== undefined) return JSON.stringify(schema.const);
@@ -528,7 +470,15 @@ function VariantSelect({
   );
 }
 
-function Guide({ workflow }: { workflow: boolean }) {
+function Guide({
+  workflow,
+  clientId,
+  onClientChange,
+}: {
+  workflow: boolean;
+  clientId?: string;
+  onClientChange: (id: McpClientId) => void;
+}) {
   return (
     <>
       <p className="text-xs font-semibold text-indigo-600 [[data-theme=dark]_&]:text-indigo-300">
@@ -623,26 +573,11 @@ function Guide({ workflow }: { workflow: boolean }) {
         <>
           <section id="installation" className="scroll-mt-28 pt-5">
             <h2 className={headingClass}>1. Add Sequence to your AI app</h2>
-            <p className={cn("mt-3 text-sm leading-7", skin.muted)}>
-              For Claude Desktop, Cursor, and clients accepting{" "}
-              <code>mcpServers</code>, add this configuration. Your AI app
-              starts the local companion using npx.
-            </p>
-            <Code value={install} label="MCP configuration" />
-            <details
-              className={cn("rounded-xl border p-4 text-sm", skin.border)}
-            >
-              <summary className="cursor-pointer font-medium">
-                VS Code or a client with a server form
-              </summary>
-              <p className={cn("mt-4 leading-7", skin.muted)}>
-                For a server form, choose local / stdio, command{" "}
-                <code>npx</code>, and the two arguments below. In VS Code, use a{" "}
-                <code>servers</code> wrapper instead of <code>mcpServers</code>{" "}
-                and include <code>"type": "stdio"</code>.
-              </p>
-              <Code value={`--yes\n${installUrl}`} label="Server arguments" />
-            </details>
+            <ClientSetup
+              clientId={clientId}
+              version={catalog.version}
+              onClientChange={onClientChange}
+            />
           </section>
           <section id="connection" className={cn(sectionClass, skin.border)}>
             <h2 className={headingClass}>2. Connect your project</h2>
@@ -673,12 +608,14 @@ function Guide({ workflow }: { workflow: boolean }) {
           <section id="local-media" className={cn(sectionClass, skin.border)}>
             <h2 className={headingClass}>3. Bring your media</h2>
             <p className={cn("mt-4 text-sm leading-7", skin.muted)}>
-              Import media in the browser, or append <code>--allow-media</code>{" "}
-              and an absolute directory path to your MCP arguments. Repeat for
-              additional directories. Agent imports are limited to those
-              directories. Use <code>--allow-media-anywhere</code> to permit any
-              readable directory. Binary transfers have no fixed file-size
-              limit.
+              The setup panel above includes media permissions directly in your
+              configuration. <code>--allow-media</code> limits agent imports to
+              the selected folders and their subfolders; repeat it for
+              additional folders. <code>--allow-media-anywhere</code> allows any
+              readable directory. Without either flag, agent file imports are
+              disabled; browser imports still work. Ask the agent to import
+              using absolute file paths. Binary transfers have no fixed
+              file-size limit.
             </p>
             <Note title="Your browser owns the project">
               Project data and requested preview images are shared with your
@@ -1001,7 +938,13 @@ export function Docs() {
                 setTab={setFormat}
               />
             ) : page === "getting-started" || page === "workflow" ? (
-              <Guide workflow={page === "workflow"} />
+              <Guide
+                workflow={page === "workflow"}
+                clientId={variant}
+                onClientChange={(id) =>
+                  navigate(`getting-started/${id}--installation`)
+                }
+              />
             ) : (
               <>
                 <h1 className="text-3xl font-semibold">Page not found</h1>

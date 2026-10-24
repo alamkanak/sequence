@@ -43,19 +43,32 @@ Ask for edits in plain language, then review them in the timeline.
 
 > “Trim the opening, add a title, and fade the music out.”
 
-No clone or build needed. Install [Node.js 24+](https://nodejs.org/), then add this
-local server to your AI app's MCP settings (Claude Desktop/Cursor format):
+No clone or build needed. Install [Node.js 24+](https://nodejs.org/), then choose
+your app in the [MCP setup guide](https://alamkanak.github.io/sequence/docs/mcp/#getting-started/codex--installation)
+for its configuration file, copyable setup, and media-access options. Includes
+Codex, Claude Code, Cursor, Copilot, Gemini CLI, Windsurf, Cline, Roo Code,
+OpenCode, Kiro, and Claude Desktop. Example (Claude Desktop/Cursor format):
 
 ```json
 {
   "mcpServers": {
     "sequence": {
       "command": "npx",
-      "args": ["--yes", "https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.2.1.tgz"]
+      "args": [
+        "--yes",
+        "https://alamkanak.github.io/sequence/mcp/sequence-mcp-0.2.1.tgz",
+        "--allow-media",
+        "/absolute/path/to/assets"
+      ]
     }
   }
 }
 ```
+
+Replace the example path with an existing media folder. Repeat `--allow-media`
+and a path for more folders, or replace those two arguments with
+`"--allow-media-anywhere"` to permit any readable directory. Omit both flags
+to import files only through the browser.
 
 Restart or refresh your AI app's MCP connection. Ask your agent to **connect to
 Sequence**. It calls `connect_editor` and gives you a link to the GitHub Pages
