@@ -106,6 +106,27 @@ the build checks both. `npm run build` publishes the editor, docs, downloadable
 tool schemas, and companion package together. CI checks that the packaged
 server's `tools/list` matches the generated reference.
 
+To test MCP locally, keep `npm run dev` running and replace the published-package
+configuration with your checkout's companion (Codex TOML; substitute your absolute
+repository path):
+
+```toml
+[mcp_servers.sequence]
+command = "node"
+args = [
+  "/absolute/path/to/sequence/companion/server.mjs",
+  "--editor-url",
+  "http://127.0.0.1:5173/"
+]
+```
+
+Restart your MCP client, ask the agent to call `connect_editor`, then open its
+pairing link in Chrome or Edge and approve the connection. Keep that tab open.
+The client starts the companion automatically; no build or deployment is needed.
+Restart the MCP connection and pair again after changing companion code or tool
+schemas. For agent file imports, append `"--allow-media", "/absolute/media/path"`
+to `args`.
+
 Performance measurements and benchmark instructions: [BENCHMARK.md](BENCHMARK.md).
 
 ## License
