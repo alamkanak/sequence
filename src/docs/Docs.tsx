@@ -12,7 +12,7 @@ import {
   XIcon,
 } from "../components/icons";
 import { BrandMark } from "../components/BrandMark";
-import { searchPages } from "../../seo.config";
+import { searchPages, site } from "../../seo.config";
 
 // Relative to this HTML entry, these also work on GitHub Pages project subpaths.
 const home = "../../";
@@ -1024,6 +1024,9 @@ export function Docs() {
               )}
             >
               <span>Sequence MCP · v{catalog.version}</span>
+              <a href={site.author.url} className="hover:text-indigo-500">
+                Maintained by {site.author.name}
+              </a>
               <a
                 href="https://github.com/alamkanak/sequence"
                 className="hover:text-indigo-500"

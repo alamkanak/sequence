@@ -3,6 +3,7 @@ export const site = {
   name: "Sequence",
   url: "https://alamkanak.github.io/sequence/",
   repository: "https://github.com/alamkanak/sequence",
+  author: { name: "Raquib Ul Alam", url: "https://github.com/alamkanak" },
   image: "https://alamkanak.github.io/sequence/brand/social-card.png",
   imageAlt:
     "Sequence: free browser video editing, by hand or with your AI agent. No installation, account, watermark, or uploads.",
@@ -66,6 +67,12 @@ export function searchMetadata(page: keyof typeof searchPages) {
     inLanguage: "en",
     isPartOf: { "@id": website["@id"] },
     about: { "@id": appId },
+    ...(page === "docs"
+      ? {
+          author: { "@type": "Person", ...site.author },
+          image: site.image,
+        }
+      : {}),
   };
   return {
     ...definition,

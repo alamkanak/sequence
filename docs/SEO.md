@@ -4,6 +4,9 @@ Research date: October 23, 2026. Public site:
 https://alamkanak.github.io/sequence/. Repository:
 https://github.com/alamkanak/sequence.
 
+For the deployed-site Lighthouse, W3C, and Google Rich Results findings, see
+[SEO-AUDIT.md](SEO-AUDIT.md).
+
 ## Search targets
 
 These priorities come from product fit and a sample of current search results.
